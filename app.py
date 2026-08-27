@@ -167,5 +167,14 @@ def create_app(config_name=None):
 # Run the application
 # --------------------------------------------------
 if __name__ == '__main__':
+    import os
+    import webbrowser
+    import threading
+
+    # Open default browser automatically only on primary process (not reloader loop)
+    if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+        threading.Timer(1.2, lambda: webbrowser.open('http://127.0.0.1:5000')).start()
+
     app = create_app()
     app.run(debug=True, host='127.0.0.1', port=5000)
+
