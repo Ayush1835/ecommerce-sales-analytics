@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Category Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4 animate-fade-in-up">
+    <!-- Header & Breadcrumbs -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Categories</li>
+                </ol>
+            </nav>
+            <h1 class="h3 font-heading mb-0">Category Management</h1>
+            <p class="text-muted small mb-0">Organize your store catalog into structured product categories.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-700">
+                <i class="bi bi-tags me-1"></i> {{ categories|length }} Total Categories
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column — Categories Table -->
+        <div class="col-lg-8">
+            <div class="bg-white rounded-4 border shadow-sm overflow-hidden">
+                <div class="px-4 py-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-folder-fill text-primary"></i>
+                        <h6 class="font-heading mb-0 text-dark">Active Store Categories</h6>
+                    </div>
+                    <span class="text-muted small">Showing {{ categories|length }} items</span>
+                </div>
+
+                {% if categories %}
+                {% set category_icons = {
+                    'Electronics': 'bi-cpu-fill',
+                    'Fashion - Men': 'bi-person-standing',
+                    'Fashion - Women': 'bi-handbag-fill',
+                    'Home & Kitchen': 'bi-house-heart-fill',
+                    'Books': 'bi-book-fill',
+                    'Sports & Fitness': 'bi-trophy-fill',
+                    'Beauty & Personal Care': 'bi-stars',
+                    'Grocery & Gourmet': 'bi-cart4',
+                    'Toys & Games': 'bi-puzzle-fill',
+                    'Automotive': 'bi-car-front-fill',
+                    'Mobile Accessories': 'bi-phone-fill',
+                    'Stationery & Office': 'bi-pen-fill'
+                } %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th scope="col" class="ps-4" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Category</th>
+                                <th scope="col" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Description</th>
+                                <th scope="col" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Products</th>
+                                <th scope="col" class="text-end pe-4" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in categories %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="rounded-3 d-flex align-items-center justify-content-center border text-primary" style="width: 44px; height: 44px; background: var(--sa-primary-light); font-size: 1.25rem;">
+                                            <i class="bi {{ category_icons.get(c.name, 'bi-folder') }}"></i>
+                                        </div>
+                                        <div>
+                                            <a href="{{ url_for('products.product_list', category=c.id) }}" class="fw-700 text-dark text-decoration-none font-heading" style="font-size: 0.95rem;">
+                                                {{ c.name }}
+                                            </a>
+                                            <div class="text-muted small">ID: #{{ c.id }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-muted small text-truncate d-inline-block" style="max-width: 240px;" title="{{ c.description }}">
+                                        {{ c.description|default('No description provided.', true) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if c.product_count|default(0) > 0 %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-700">
+                                        {{ c.product_count }} items
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-light text-muted border rounded-pill px-3 py-1 fw-600">
+                                        0 items
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-sm btn-outline-custom d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#editCategoryModal{{ c.id }}">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </button>
+
+                                        <form action="{{ url_for('admin.delete_cat', category_id=c.id) }}" method="POST" class="d-inline" onsubmit="{% if c.product_count|default(0) > 0 %}return confirm('WARNING: {{ c.name }} contains {{ c.product_count }} products. Deleting it will affect active listings. Proceed?');{% else %}return confirm('Are you sure you want to delete {{ c.name }}?');{% endif %}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-tags text-muted display-4 mb-3"></i>
+                    <h6 class="fw-700 text-dark mb-1">No Categories Found</h6>
+                    <p class="text-muted small mb-0">Use the form on the right to create your first product category.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column — Add Category Form -->
+        <div class="col-lg-4">
+            <div class="bg-white rounded-4 border p-4 shadow-sm position-sticky" style="top: 90px;">
+                <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                    <i class="bi bi-folder-plus text-primary fs-5"></i>
+                    <h6 class="fw-700 font-heading mb-0 text-dark">Add New Category</h6>
+                </div>
+                
+                <form action="{{ url_for('admin.add_category') }}" method="POST" novalidate>
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-600" style="font-size: 0.875rem;">Category Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="e.g. Gaming & Consoles" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="description" class="form-label fw-600" style="font-size: 0.875rem;">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Brief summary of products in this category..."></textarea>
+                    </div>
+
+                    <!-- 1-Click Quick Presets -->
+                    <div class="mb-4">
+                        <label class="form-label fw-600 text-muted small uppercase tracking-wider mb-2">1-Click Presets</label>
+                        <div class="d-flex flex-wrap gap-1.5">
+                            <button type="button" class="btn btn-sm btn-light border small" onclick="fillCategory('Gaming & Consoles', 'Video game consoles, controllers, and accessories.')">🎮 Gaming</button>
+                            <button type="button" class="btn btn-sm btn-light border small" onclick="fillCategory('Footwear', 'Sneakers, formal shoes, and casual sandals.')">👟 Footwear</button>
+                            <button type="button" class="btn btn-sm btn-light border small" onclick="fillCategory('Jewelry & Watches', 'Luxury watches, rings, and fashion jewelry.')">⌚ Jewelry</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2.5 shadow-sm">
+                        <i class="bi bi-plus-circle me-1.5"></i> Add Category
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modals (Placed OUTSIDE table DOM) -->
+{% if categories %}
+    {% for c in categories %}
+    <div class="modal fade" id="editCategoryModal{{ c.id }}" tabindex="-1" aria-labelledby="editCategoryModalLabel{{ c.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-light border-bottom p-3.5">
+                    <h6 class="modal-title font-heading fw-700 text-dark" id="editCategoryModalLabel{{ c.id }}">
+                        <i class="bi bi-pencil-square me-2 text-primary"></i>Edit Category: {{ c.name }}
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('admin.edit_category', category_id=c.id) }}" method="POST" novalidate>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label for="edit_name_{{ c.id }}" class="form-label fw-600" style="font-size: 0.875rem;">Category Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="edit_name_{{ c.id }}" name="name" value="{{ c.name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_description_{{ c.id }}" class="form-label fw-600" style="font-size: 0.875rem;">Description</label>
+                            <textarea class="form-control" id="edit_description_{{ c.id }}" name="description" rows="3">{{ c.description|default('', true) }}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-top p-3">
+                        <button type="button" class="btn btn-outline-custom px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary-custom px-4">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function fillCategory(name, desc) {
+        document.getElementById('name').value = name;
+        document.getElementById('description').value = desc;
+    }
+</script>
+{% endblock %}

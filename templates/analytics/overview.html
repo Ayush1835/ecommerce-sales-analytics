@@ -1,0 +1,472 @@
+{% extends 'base.html' %}
+
+{% block title %}Sales & Customer Analytics - ShopAnalytica{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 animate-fade-in-up" style="max-width: 1320px;">
+    <!-- Page Header & Executive CSV Export Suite -->
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Analytics</li>
+                </ol>
+            </nav>
+            <div class="d-flex align-items-center gap-3">
+                <h1 class="h3 font-heading mb-0">Sales & Customer Analytics</h1>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1.5 fw-700">
+                    <i class="bi bi-cpu-fill me-1"></i> Pandas &amp; NumPy Powered
+                </span>
+            </div>
+            <p class="text-muted small mb-0 mt-1">Data-driven business intelligence, customer spending segmentation, and revenue forecasting.</p>
+        </div>
+
+        <!-- Executive Export Toolbar Suite -->
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="text-muted small fw-700 uppercase me-1 d-none d-xl-inline"><i class="bi bi-download me-1"></i>Export Data:</span>
+            <a href="{{ url_for('analytics.export_csv', report_type='sales_summary') }}" class="btn btn-sm btn-white bg-white text-dark border rounded-pill px-3 py-2 fw-700 shadow-sm hover-lift d-inline-flex align-items-center gap-1.5">
+                <i class="bi bi-file-earmark-spreadsheet-fill text-success"></i> Sales CSV
+            </a>
+            <a href="{{ url_for('analytics.export_csv', report_type='category_breakdown') }}" class="btn btn-sm btn-white bg-white text-dark border rounded-pill px-3 py-2 fw-700 shadow-sm hover-lift d-inline-flex align-items-center gap-1.5">
+                <i class="bi bi-tags-fill text-primary"></i> Categories CSV
+            </a>
+            <a href="{{ url_for('analytics.export_csv', report_type='customer_segments') }}" class="btn btn-sm btn-white bg-white text-dark border rounded-pill px-3 py-2 fw-700 shadow-sm hover-lift d-inline-flex align-items-center gap-1.5">
+                <i class="bi bi-people-fill text-info"></i> Customers CSV
+            </a>
+            <a href="{{ url_for('analytics.export_csv', report_type='top_products') }}" class="btn btn-sm btn-white bg-white text-dark border rounded-pill px-3 py-2 fw-700 shadow-sm hover-lift d-inline-flex align-items-center gap-1.5">
+                <i class="bi bi-trophy-fill text-warning"></i> Top Products CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Top Statistical Cards Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="bg-white p-4 rounded-4 border shadow-sm h-100 d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small fw-700 uppercase tracking-wider mb-1">Total Platform Revenue</div>
+                    <div class="h3 font-heading fw-800 text-dark mb-1">₹{{ '{:,.2f}'.format(monthly.total_revenue) }}</div>
+                    <div>
+                        {% if monthly.latest_growth_rate is defined and monthly.latest_growth_rate > 0 %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-700 small"><i class="bi bi-arrow-up-right me-1"></i> {{ '{:.1f}'.format(monthly.latest_growth_rate) }}% MoM</span>
+                        {% elif monthly.latest_growth_rate is defined and monthly.latest_growth_rate < 0 %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1 fw-700 small"><i class="bi bi-arrow-down-right me-1"></i> {{ '{:.1f}'.format(monthly.latest_growth_rate|abs) }}% MoM</span>
+                        {% else %}
+                            <span class="badge bg-light text-secondary border rounded-pill px-2.5 py-1 fw-600 small">Stable Revenue</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; font-size: 1.6rem;">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="bg-white p-4 rounded-4 border shadow-sm h-100 d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small fw-700 uppercase tracking-wider mb-1">Completed Orders</div>
+                    <div class="h3 font-heading fw-800 text-dark mb-1">{{ monthly.total_orders }}</div>
+                    <div class="text-muted small fw-500">Fulfilled transactions</div>
+                </div>
+                <div class="rounded-3 bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; font-size: 1.6rem;">
+                    <i class="bi bi-bag-check-fill"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="bg-white p-4 rounded-4 border shadow-sm h-100 d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small fw-700 uppercase tracking-wider mb-1">Average Order Value (AOV)</div>
+                    <div class="h3 font-heading fw-800 text-dark mb-1">₹{{ '{:,.2f}'.format(monthly.avg_aov) }}</div>
+                    <div class="text-muted small fw-500">Mean per order spend</div>
+                </div>
+                <div class="rounded-3 bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; font-size: 1.6rem;">
+                    <i class="bi bi-calculator-fill"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="bg-white p-4 rounded-4 border shadow-sm h-100 d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small fw-700 uppercase tracking-wider mb-1">Customer Spend Std Dev</div>
+                    <div class="h3 font-heading fw-800 text-dark mb-1">₹{{ '{:,.2f}'.format(customer.stats.std_dev) if customer.stats else '0.00' }}</div>
+                    <div class="text-muted small fw-500">
+                        Mean: ₹{{ '{:,.0f}'.format(customer.stats.mean_spend) if customer.stats else '0' }}
+                    </div>
+                </div>
+                <div class="rounded-3 bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; font-size: 1.6rem;">
+                    <i class="bi bi-pie-chart-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Grid 1 (Row 1) -->
+    <div class="row g-4 mb-4">
+        <!-- Monthly Revenue & Order Growth -->
+        <div class="col-lg-8">
+            <div class="bg-white rounded-4 border shadow-sm h-100 overflow-hidden">
+                <div class="px-4 py-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-graph-up text-primary fs-5"></i>
+                        <h6 class="font-heading mb-0 text-dark">Monthly Revenue &amp; Order Volume Trend</h6>
+                    </div>
+                    <span class="badge bg-white text-secondary border small">Dual Y-Axis</span>
+                </div>
+                <div class="p-4">
+                    <div style="height: 350px;">
+                        <canvas id="monthlyGrowthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales by Category Share -->
+        <div class="col-lg-4">
+            <div class="bg-white rounded-4 border shadow-sm h-100 overflow-hidden">
+                <div class="px-4 py-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-pie-chart text-primary fs-5"></i>
+                        <h6 class="font-heading mb-0 text-dark">Category Revenue Share</h6>
+                    </div>
+                    <span class="badge bg-white text-secondary border small">Doughnut</span>
+                </div>
+                <div class="p-4">
+                    <div style="height: 350px; position: relative;">
+                        <canvas id="categoryShareChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Grid 2 (Row 2) -->
+    <div class="row g-4 mb-4">
+        <!-- Top Products by Sales Volume -->
+        <div class="col-lg-6">
+            <div class="bg-white rounded-4 border shadow-sm h-100 overflow-hidden">
+                <div class="px-4 py-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-bar-chart-steps text-primary fs-5"></i>
+                        <h6 class="font-heading mb-0 text-dark">Top Products by Units Sold</h6>
+                    </div>
+                    <span class="badge bg-white text-secondary border small">Top 8 Items</span>
+                </div>
+                <div class="p-4">
+                    <div style="height: 330px;">
+                        <canvas id="topProductsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Spending Segmentation -->
+        <div class="col-lg-6">
+            <div class="bg-white rounded-4 border shadow-sm h-100 overflow-hidden">
+                <div class="px-4 py-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-people-fill text-primary fs-5"></i>
+                        <h6 class="font-heading mb-0 text-dark">Customer Spending Tiers (NumPy Quantiles)</h6>
+                    </div>
+                    <span class="badge bg-white text-secondary border small">Segmentation</span>
+                </div>
+                <div class="p-4 d-flex justify-content-center align-items-center">
+                    <div style="height: 330px; width: 100%;">
+                        <canvas id="customerSegmentsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Grid 3 (Row 3) -->
+    <div class="row g-4 mb-4">
+        <!-- Payment Method Preferences -->
+        <div class="col-lg-6">
+            <div class="bg-white rounded-4 border shadow-sm h-100 overflow-hidden">
+                <div class="px-4 py-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-credit-card-2-front-fill text-primary fs-5"></i>
+                        <h6 class="font-heading mb-0 text-dark">Payment Method Distribution</h6>
+                    </div>
+                    <span class="badge bg-white text-secondary border small">Gateway Share</span>
+                </div>
+                <div class="p-4">
+                    <div style="height: 300px;">
+                        <canvas id="paymentMethodsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NumPy Statistical Metrics Summary -->
+        <div class="col-lg-6">
+            <div class="bg-white rounded-4 border shadow-sm h-100 overflow-hidden">
+                <div class="px-4 py-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-cpu-fill text-primary fs-5"></i>
+                        <h6 class="font-heading mb-0 text-dark">NumPy Statistical Metrics Summary</h6>
+                    </div>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-700 small">NumPy 2.x</span>
+                </div>
+                <div class="p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="text-dark fw-600"><i class="bi bi-people text-indigo me-2"></i>Sample Count</td>
+                                    <td class="text-end fw-800 font-heading text-dark">{{ customer.stats.count if customer.stats else '0' }} customers</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-dark fw-600"><i class="bi bi-calculator text-teal me-2"></i>Mean Customer Spend</td>
+                                    <td class="text-end fw-800 font-heading text-dark">₹{{ '{:,.2f}'.format(customer.stats.mean_spend) if customer.stats else '0.00' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-dark fw-600"><i class="bi bi-bullseye text-warning me-2"></i>Median Customer Spend</td>
+                                    <td class="text-end fw-800 font-heading text-dark">₹{{ '{:,.2f}'.format(customer.stats.median_spend) if customer.stats else '0.00' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-dark fw-600"><i class="bi bi-activity text-success me-2"></i>Spending Standard Deviation</td>
+                                    <td class="text-end fw-800 font-heading text-dark">₹{{ '{:,.2f}'.format(customer.stats.std_dev) if customer.stats else '0.00' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-dark fw-600"><i class="bi bi-trophy-fill text-warning me-2"></i>75th Percentile (VIP Threshold)</td>
+                                    <td class="text-end fw-800 font-heading text-success">₹{{ '{:,.2f}'.format(customer.q75) if customer.q75 else '0.00' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-dark fw-600"><i class="bi bi-arrow-down-circle text-danger me-2"></i>25th Percentile</td>
+                                    <td class="text-end fw-800 font-heading text-dark">₹{{ '{:,.2f}'.format(customer.q25) if customer.q25 else '0.00' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Shared formatting functions
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            maximumFractionDigits: 0
+        }).format(value);
+    };
+
+    const currencyTooltip = {
+        callbacks: {
+            label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                    label += ': ';
+                }
+                if (context.parsed.y !== null) {
+                    label += formatCurrency(context.parsed.y);
+                } else if (context.parsed !== null) {
+                    label += formatCurrency(context.parsed);
+                }
+                return label;
+            }
+        }
+    };
+
+    // Color Palette
+    const colors = {
+        indigo: '#6366F1',
+        teal: '#0D9488',
+        amber: '#F59E0B',
+        emerald: '#10B981',
+        crimson: '#EF4444',
+        gray: '#9CA3AF'
+    };
+
+    // 1. Monthly Revenue & Order Growth (Line Chart, Dual Y-Axis)
+    const monthlyCtx = document.getElementById('monthlyGrowthChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: {{ monthly.months | tojson }},
+            datasets: [
+                {
+                    label: 'Revenue (₹)',
+                    data: {{ monthly.revenue | tojson }},
+                    borderColor: colors.indigo,
+                    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+                    yAxisID: 'y',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Orders',
+                    data: {{ monthly.orders | tojson }},
+                    borderColor: colors.emerald,
+                    backgroundColor: colors.emerald,
+                    yAxisID: 'y1',
+                    tension: 0.4,
+                    borderDash: [5, 5]
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.datasetIndex === 0) {
+                                return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                            }
+                            return context.dataset.label + ': ' + context.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + (value / 1000) + 'k';
+                        }
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false,
+                    }
+                }
+            }
+        }
+    });
+
+    // 2. Sales by Category Share (Doughnut Chart)
+    const categoryCtx = document.getElementById('categoryShareChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ category.categories | tojson }},
+            datasets: [{
+                data: {{ category.revenue | tojson }},
+                backgroundColor: [colors.indigo, colors.teal, colors.amber, colors.emerald, colors.crimson, colors.gray],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 12, padding: 15 }
+                },
+                tooltip: currencyTooltip
+            }
+        }
+    });
+
+    // 3. Top 8 Products by Sales Volume (Horizontal Bar Chart)
+    const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
+    new Chart(topProductsCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ products.products | tojson }},
+            datasets: [{
+                label: 'Units Sold',
+                data: {{ products.units | tojson }},
+                backgroundColor: colors.indigo,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // 4. Customer Spending Segmentation (Pie Chart)
+    const segmentsData = {{ customer.segments | tojson }};
+    const segmentsCtx = document.getElementById('customerSegmentsChart').getContext('2d');
+    new Chart(segmentsCtx, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(segmentsData),
+            datasets: [{
+                data: Object.values(segmentsData),
+                backgroundColor: [colors.amber, colors.indigo, colors.emerald, colors.crimson, colors.gray],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { boxWidth: 12, padding: 12 }
+                }
+            }
+        }
+    });
+
+    // 5. Payment Method Preferences (Bar Chart)
+    const paymentCtx = document.getElementById('paymentMethodsChart').getContext('2d');
+    new Chart(paymentCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ payment.methods | tojson }},
+            datasets: [{
+                label: 'Revenue',
+                data: {{ payment.revenue | tojson }},
+                backgroundColor: colors.emerald,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: currencyTooltip
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + (value / 1000) + 'k';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

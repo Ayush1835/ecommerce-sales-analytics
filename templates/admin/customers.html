@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer Directory - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 animate-fade-in-up" style="max-width: 1320px;">
+    <!-- Page Header & Summary Badges -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Customers</li>
+                </ol>
+            </nav>
+            <h1 class="h3 font-heading mb-0">Customer Directory</h1>
+            <p class="text-muted small mb-0">Manage registered customer accounts, order histories, and lifetime value analytics.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-700">
+                <i class="bi bi-people me-1"></i> {{ customers|length }} Active Customers
+            </span>
+        </div>
+    </div>
+
+    <!-- Customer Metrics Bar -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="bg-white p-3.5 rounded-4 border shadow-sm d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-600 uppercase tracking-wider">Total Registered</div>
+                    <div class="h4 font-heading fw-800 text-dark mb-0">{{ customers|length }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="bg-white p-3.5 rounded-4 border shadow-sm d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                    <i class="bi bi-bag-check-fill"></i>
+                </div>
+                <div>
+                    {% set total_orders = customers|sum(attribute='order_count') %}
+                    <div class="text-muted small fw-600 uppercase tracking-wider">Lifetime Orders</div>
+                    <div class="h4 font-heading fw-800 text-dark mb-0">{{ total_orders }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="bg-white p-3.5 rounded-4 border shadow-sm d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                    <i class="bi bi-currency-rupee"></i>
+                </div>
+                <div>
+                    {% set total_spent = customers|sum(attribute='total_spent') %}
+                    <div class="text-muted small fw-600 uppercase tracking-wider">Customer Revenue</div>
+                    <div class="h4 font-heading fw-800 text-dark mb-0">₹{{ "{:,.2f}".format(total_spent) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table of Customers -->
+    <div class="bg-white rounded-4 border shadow-sm overflow-hidden">
+        <div class="px-4 py-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+            <h6 class="font-heading mb-0 text-dark">Customer Profiles</h6>
+            <span class="text-muted small">Showing {{ customers|length }} customer records</span>
+        </div>
+
+        {% if customers %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th scope="col" class="ps-4" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Customer</th>
+                        <th scope="col" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Contact Details</th>
+                        <th scope="col" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Shipping Address</th>
+                        <th scope="col" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Total Orders</th>
+                        <th scope="col" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Lifetime Spend</th>
+                        <th scope="col" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Joined Date</th>
+                        <th scope="col" class="text-end pe-4" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in customers %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-circle rounded-circle text-white d-flex align-items-center justify-content-center fw-800 font-heading" style="width: 44px; height: 44px; font-size: 1.1rem; background: linear-gradient(135deg, #6366F1, #8B5CF6);">
+                                    {{ c.name[0]|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-700 text-dark font-heading" style="font-size: 0.95rem;">{{ c.name }}</div>
+                                    <span class="badge bg-light text-secondary border small" style="font-size: 0.7rem;">ID: #{{ c.id }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-dark small fw-600"><i class="bi bi-envelope text-primary me-1.5"></i>{{ c.email }}</div>
+                            <div class="text-muted small"><i class="bi bi-telephone text-muted me-1.5"></i>{{ c.phone|default('Not provided', true) }}</div>
+                        </td>
+                        <td>
+                            <span class="text-muted small text-truncate d-inline-block" style="max-width: 220px;" title="{{ c.address }}">
+                                {{ c.address|default('No address saved.', true) }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if c.order_count > 0 %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-700">
+                                {{ c.order_count }} order{% if c.order_count > 1 %}s{% endif %}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-light text-muted border rounded-pill px-3 py-1 fw-600">
+                                0 orders
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="fw-800 font-heading text-dark fs-6">₹{{ "{:,.2f}".format(c.total_spent|default(0)) }}</span>
+                        </td>
+                        <td>
+                            <span class="text-secondary small fw-500">{{ c.created_at }}</span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('admin.orders', customer_id=c.id) }}" class="btn btn-sm btn-outline-custom d-inline-flex align-items-center gap-1" title="View Customer Orders">
+                                <i class="bi bi-receipt"></i> Orders ({{ c.order_count }})
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="px-4 py-3 bg-light border-top d-flex align-items-center justify-content-between text-muted small">
+            <span>Showing <strong>{{ customers|length }}</strong> customer accounts</span>
+            <span>ShopAnalytica Customer Analytics</span>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-people text-muted display-4 mb-3"></i>
+            <h6 class="fw-700 text-dark mb-1">No Customers Found</h6>
+            <p class="text-muted small mb-0">No registered customer accounts found in the database.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

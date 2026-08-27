@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-wrapper {
+        min-height: calc(100vh - 76px);
+    }
+    .auth-brand-panel {
+        background: var(--sa-gradient);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    .auth-brand-panel::before {
+        content: '';
+        position: absolute;
+        top: -30%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 50%;
+    }
+    .auth-brand-panel::after {
+        content: '';
+        position: absolute;
+        bottom: -20%;
+        left: -15%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255,255,255,0.04);
+        border-radius: 50%;
+    }
+    .auth-brand-panel h2 {
+        color: #fff;
+        font-weight: 800;
+        font-size: 2.2rem;
+        letter-spacing: -0.03em;
+        position: relative;
+        z-index: 1;
+    }
+    .auth-brand-panel p {
+        opacity: 0.85;
+        font-size: 1.05rem;
+        position: relative;
+        z-index: 1;
+        max-width: 350px;
+        text-align: center;
+    }
+    .auth-step {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+    .auth-step-number {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+    .auth-step-text {
+        font-size: 0.9rem;
+    }
+    .auth-step-text span {
+        display: block;
+        font-weight: 600;
+    }
+    .auth-step-text small {
+        opacity: 0.7;
+        font-size: 0.8rem;
+    }
+    .auth-form-panel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 2rem;
+        background: #fff;
+    }
+    .auth-form-container {
+        width: 100%;
+        max-width: 480px;
+    }
+    .auth-form-container h2 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+    .input-icon-wrapper {
+        position: relative;
+    }
+    .input-icon-wrapper i.input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--sa-text-light);
+        font-size: 1rem;
+    }
+    .input-icon-wrapper input,
+    .input-icon-wrapper textarea {
+        padding-left: 2.75rem;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--sa-text-light);
+        cursor: pointer;
+        padding: 0;
+        font-size: 1rem;
+    }
+    .password-toggle:hover {
+        color: var(--sa-primary);
+    }
+    .password-strength {
+        height: 4px;
+        border-radius: 2px;
+        margin-top: 0.5rem;
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row g-0 auth-wrapper">
+        <!-- Left Panel — Brand -->
+        <div class="col-lg-5 d-none d-lg-flex auth-brand-panel">
+            <div class="mb-4">
+                <i class="bi bi-shop" style="font-size: 3rem; opacity: 0.9;"></i>
+            </div>
+            <h2 class="mb-3 text-center">Join<br>ShopAnalytica</h2>
+            <p class="mb-5">Create your account in 3 simple steps and start shopping today.</p>
+
+            <div class="d-flex flex-column gap-3 w-100" style="max-width: 300px;">
+                <div class="auth-step">
+                    <div class="auth-step-number">1</div>
+                    <div class="auth-step-text">
+                        <span>Create Account</span>
+                        <small>Fill in your details</small>
+                    </div>
+                </div>
+                <div style="width:1px; height:20px; background:rgba(255,255,255,0.2); margin-left:18px;"></div>
+                <div class="auth-step">
+                    <div class="auth-step-number">2</div>
+                    <div class="auth-step-text">
+                        <span>Browse & Shop</span>
+                        <small>Explore 60+ products</small>
+                    </div>
+                </div>
+                <div style="width:1px; height:20px; background:rgba(255,255,255,0.2); margin-left:18px;"></div>
+                <div class="auth-step">
+                    <div class="auth-step-number">3</div>
+                    <div class="auth-step-text">
+                        <span>Track Orders</span>
+                        <small>Real-time order tracking</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel — Register Form -->
+        <div class="col-lg-7 auth-form-panel">
+            <div class="auth-form-container animate-fade-in-up">
+                <!-- Mobile brand -->
+                <div class="d-lg-none text-center mb-3">
+                    <span style="font-size: 1.3rem; font-weight: 800; background: var(--sa-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                        <i class="bi bi-shop" style="-webkit-text-fill-color: var(--sa-primary);"></i> ShopAnalytica
+                    </span>
+                </div>
+
+                <h2 class="mb-1">Create Account</h2>
+                <p class="text-muted mb-4">Fill in the details below to get started</p>
+
+                <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+                    <!-- Name -->
+                    <div class="mb-3">
+                        <label class="form-label-custom" for="name">
+                            Full Name <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-person input-icon"></i>
+                            <input type="text" class="form-control form-control-custom" id="name"
+                                   name="name" value="{{ name|default('') }}"
+                                   placeholder="Enter your full name" required autofocus>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label class="form-label-custom" for="email">
+                            Email Address <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-envelope input-icon"></i>
+                            <input type="email" class="form-control form-control-custom" id="email"
+                                   name="email" value="{{ email|default('') }}"
+                                   placeholder="you@example.com" required>
+                        </div>
+                    </div>
+
+                    <!-- Password Row -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom" for="password">
+                                Password <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-lock input-icon"></i>
+                                <input type="password" class="form-control form-control-custom" id="password"
+                                       name="password" placeholder="Min. 8 characters" required
+                                       oninput="checkPasswordStrength(this.value)">
+                                <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength" id="passwordStrength"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom" for="confirm_password">
+                                Confirm Password <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-lock-fill input-icon"></i>
+                                <input type="password" class="form-control form-control-custom" id="confirm_password"
+                                       name="confirm_password" placeholder="Re-enter password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('confirm_password', this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="mb-3">
+                        <label class="form-label-custom" for="phone">
+                            Phone Number <span class="text-muted fw-normal">(optional)</span>
+                        </label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-telephone input-icon"></i>
+                            <input type="tel" class="form-control form-control-custom" id="phone"
+                                   name="phone" value="{{ phone|default('') }}"
+                                   placeholder="10-digit mobile number" maxlength="10">
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="mb-4">
+                        <label class="form-label-custom" for="address">
+                            Address <span class="text-muted fw-normal">(optional)</span>
+                        </label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-geo-alt input-icon" style="top: 1.2rem; transform: none;"></i>
+                            <textarea class="form-control form-control-custom" id="address"
+                                      name="address" rows="2"
+                                      placeholder="Your delivery address">{{ address|default('') }}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2 mb-3" style="font-size: 1rem;">
+                        <i class="bi bi-person-plus me-2"></i>Create Account
+                    </button>
+
+                    <!-- Terms -->
+                    <p class="text-center text-muted mb-3" style="font-size: 0.8rem;">
+                        By creating an account, you agree to our
+                        <a href="#" class="text-decoration-none">Terms of Service</a> and
+                        <a href="#" class="text-decoration-none">Privacy Policy</a>.
+                    </p>
+
+                    <!-- Login link -->
+                    <p class="text-center mb-0" style="font-size: 0.95rem;">
+                        Already have an account?
+                        <a href="{{ url_for('auth.login') }}" class="fw-600 text-decoration-none">Sign In</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function togglePassword(inputId, btn) {
+        var input = document.getElementById(inputId);
+        var icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    }
+
+    function checkPasswordStrength(password) {
+        var bar = document.getElementById('passwordStrength');
+        var strength = 0;
+        if (password.length >= 8) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+        var colors = ['#EF4444', '#F59E0B', '#3B82F6', '#10B981'];
+        var widths = ['25%', '50%', '75%', '100%'];
+
+        if (password.length === 0) {
+            bar.style.width = '0';
+            bar.style.background = 'transparent';
+        } else {
+            bar.style.width = widths[strength - 1] || '25%';
+            bar.style.background = colors[strength - 1] || '#EF4444';
+        }
+    }
+</script>
+{% endblock %}

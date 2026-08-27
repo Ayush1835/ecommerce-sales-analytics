@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Product - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate-fade-in-up" style="max-width: 960px;">
+    <!-- Page Header & Breadcrumb -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{{ url_for('admin.products') }}" class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; padding: 0;" title="Back to Products">
+                <i class="bi bi-arrow-left fs-5"></i>
+            </a>
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1">
+                        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('admin.products') }}">Products</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Add Product</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 font-heading mb-0">Add New Product</h1>
+                <p class="text-muted small mb-0">Create a new item listing for your customer storefront catalog.</p>
+            </div>
+        </div>
+        <div>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-700">
+                <i class="bi bi-box-seam me-1"></i> Inventory Manager
+            </span>
+        </div>
+    </div>
+
+    <!-- Main Add Product Form -->
+    <form action="{{ url_for('admin.add_product') }}" method="POST" novalidate>
+        <div class="row g-4">
+            <!-- Left Column — Image Preview & Presets -->
+            <div class="col-lg-4">
+                <div class="bg-white rounded-4 border p-4 shadow-sm text-center mb-4">
+                    <h6 class="fw-700 font-heading mb-3 text-start">Image Preview</h6>
+                    
+                    <div class="p-3 bg-light rounded-4 border mb-3 d-flex align-items-center justify-content-center" style="min-height: 200px;">
+                        <img src="https://picsum.photos/seed/newproduct/400/400" id="imagePreview" alt="Product Preview" class="img-fluid rounded-3" style="max-height: 180px; object-fit: contain;">
+                    </div>
+                    
+                    <div class="text-start mb-3">
+                        <label for="image_url" class="form-label fw-600 mb-1" style="font-size: 0.875rem;">Image URL</label>
+                        <input type="text" class="form-control" id="image_url" name="image_url" value="{{ image_url|default('') }}" placeholder="https://picsum.photos/seed/product/400/400" oninput="updatePreview(this.value)">
+                        <div class="form-text text-muted small mt-1">Leave blank to auto-generate a sample image.</div>
+                    </div>
+
+                    <!-- Quick Preset Images -->
+                    <div class="text-start border-top pt-3">
+                        <label class="form-label fw-600 text-muted small uppercase tracking-wider mb-2">1-Click Image Presets</label>
+                        <div class="d-flex flex-wrap gap-1.5">
+                            <button type="button" class="btn btn-sm btn-light border small" onclick="setPreset('https://picsum.photos/seed/gadget/400/400')">💻 Tech</button>
+                            <button type="button" class="btn btn-sm btn-light border small" onclick="setPreset('https://picsum.photos/seed/shirt/400/400')">👕 Fashion</button>
+                            <button type="button" class="btn btn-sm btn-light border small" onclick="setPreset('https://picsum.photos/seed/bookcover/400/400')">📚 Book</button>
+                            <button type="button" class="btn btn-sm btn-light border small" onclick="setPreset('https://picsum.photos/seed/fitness/400/400')">⚽ Sports</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Initial Visibility Switch -->
+                <div class="bg-white rounded-4 border p-4 shadow-sm">
+                    <h6 class="fw-700 font-heading mb-3">Initial Visibility</h6>
+                    <div class="form-check form-switch p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between m-0">
+                        <label class="form-check-label fw-600 text-dark mb-0 ms-0" for="is_active">
+                            <i class="bi bi-eye me-2 text-primary"></i>Publish Immediately
+                        </label>
+                        <input class="form-check-input ms-0" type="checkbox" id="is_active" name="is_active" checked value="1" style="width: 2.5em; height: 1.3em;">
+                    </div>
+                    <div class="text-muted small mt-2">Active products appear instantly in catalog searches.</div>
+                </div>
+            </div>
+
+            <!-- Right Column — Main Input Controls -->
+            <div class="col-lg-8">
+                <div class="bg-white rounded-4 border p-4 p-md-5 shadow-sm">
+                    <!-- Basic Information Section -->
+                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                        <i class="bi bi-info-circle-fill text-primary fs-5"></i>
+                        <h6 class="fw-700 font-heading mb-0 text-dark">Basic Information</h6>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="name" class="form-label fw-600">Product Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg fs-6" id="name" name="name" value="{{ name|default('') }}" placeholder="e.g. Sony PlayStation 5 Digital Edition" required autofocus>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="category_id" class="form-label fw-600">Category <span class="text-danger">*</span></label>
+                        <select class="form-select form-select-lg fs-6" id="category_id" name="category_id" required>
+                            <option value="" disabled {% if not category_id %}selected{% endif %}>Select a category for this product</option>
+                            {% for c in categories %}
+                            <option value="{{ c.id }}" {% if category_id|default('')|string == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="description" class="form-label fw-600">Product Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" placeholder="Enter comprehensive product overview, specifications, features, and package contents...">{{ description|default('') }}</textarea>
+                    </div>
+
+                    <!-- Pricing & Inventory Section -->
+                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom pt-2">
+                        <i class="bi bi-tag-fill text-success fs-5"></i>
+                        <h6 class="fw-700 font-heading mb-0 text-dark">Pricing & Inventory</h6>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="price" class="form-label fw-600">Price (₹) <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light fw-700 fs-6">₹</span>
+                                <input type="number" step="0.01" min="0.01" class="form-control fs-6" id="price" name="price" value="{{ price|default('') }}" placeholder="49999.00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="stock" class="form-label fw-600">Stock Quantity <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-box"></i></span>
+                                <input type="number" min="0" class="form-control fs-6" id="stock" name="stock" value="{{ stock|default('') }}" placeholder="50" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-end gap-3 pt-4 border-top">
+                        <a href="{{ url_for('admin.products') }}" class="btn btn-light px-4 py-2.5 fw-600 border">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-5 py-2.5 fw-700 shadow-sm">
+                            <i class="bi bi-plus-circle me-1.5"></i> Create Product Item
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updatePreview(url) {
+        var img = document.getElementById('imagePreview');
+        if (img && url.trim() !== '') {
+            img.src = url;
+        }
+    }
+
+    function setPreset(url) {
+        document.getElementById('image_url').value = url;
+        updatePreview(url);
+    }
+</script>
+{% endblock %}

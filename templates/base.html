@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ShopAnalytica — E-Commerce Sales & Customer Analytics Platform. Browse products, track orders, and gain business insights.">
+    <meta name="author" content="ShopAnalytica">
+
+    <title>{% block title %}ShopAnalytica{% endblock %} | E-Commerce Analytics</title>
+
+    <!-- Google Fonts — Plus Jakarta Sans & Outfit for executive, modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Chart.js (loaded globally for analytics pages) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- ========== NAVIGATION ========== -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top" id="mainNavbar">
+        <div class="container">
+            <!-- Brand -->
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <i class="bi bi-shop me-2"></i>ShopAnalytica
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarContent" aria-controls="navbarContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navbar Content -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <!-- Left Nav Links -->
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
+                            <i class="bi bi-house-door me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('products.') %}active{% endif %}" href="{{ url_for('products.product_list') }}">
+                            <i class="bi bi-grid me-1"></i>Products
+                        </a>
+                    </li>
+
+                    {% if session.get('user') and session['user']['role'] == 'admin' %}
+                    <!-- Admin-only links -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint and request.endpoint.startswith('admin.') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-speedometer2 me-1 text-primary"></i>Admin
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-custom shadow-lg">
+                            <li class="dropdown-header text-uppercase tracking-wider">Console Management</li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer2 text-indigo me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.products') }}"><i class="bi bi-box-seam text-emerald me-2"></i>Manage Products</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.categories') }}"><i class="bi bi-tags text-amber me-2"></i>Manage Categories</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.customers') }}"><i class="bi bi-people text-teal me-2"></i>Customers Directory</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.orders') }}"><i class="bi bi-receipt text-rose me-2"></i>Manage Orders</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li class="dropdown-header text-uppercase tracking-wider">Business Intelligence</li>
+                            <li><a class="dropdown-item" href="{{ url_for('analytics.overview') }}"><i class="bi bi-bar-chart-fill text-violet me-2"></i>Analytics Overview</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                <!-- Right Nav — Search + Auth + Cart -->
+                <div class="d-flex align-items-center gap-2">
+                    {% if session.get('user') %}
+                        <!-- Logged-in user menu -->
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center text-white font-heading fw-600" href="#"
+                               role="button" data-bs-toggle="dropdown">
+                                <div class="avatar-circle me-2">
+                                    {{ session['user']['name'][0]|upper }}
+                                </div>
+                                <span>{{ session['user']['name'] }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom shadow-lg">
+                                <li class="px-3 py-2 border-bottom border-slate-700">
+                                    <div class="fw-700 text-white font-heading" style="font-size: 0.9rem;">{{ session['user']['name'] }}</div>
+                                    <div class="text-slate-400 small">{{ session['user']['email'] }}</div>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill mt-1" style="font-size: 0.7rem; font-weight: 700;">{{ session['user']['role']|upper }}</span>
+                                </li>
+                                <li><a class="dropdown-item mt-1" href="{{ url_for('auth.profile') }}"><i class="bi bi-person-circle text-teal me-2"></i>My Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('orders.my_orders') }}"><i class="bi bi-bag-check text-emerald me-2"></i>My Orders</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-rose" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                            </ul>
+                        </div>
+
+                        {% if session['user']['role'] == 'customer' %}
+                        <!-- Cart icon -->
+                        <a class="nav-link text-white position-relative ms-2 {% if request.endpoint and request.endpoint.startswith('cart.') %}active{% endif %}" href="{{ url_for('cart.view_cart') }}">
+                            <i class="bi bi-cart3" style="font-size: 1.2rem;"></i>
+                            {% if session.get('cart_count', 0) > 0 %}
+                            <span class="navbar-cart-badge">{{ session['cart_count'] }}</span>
+                            {% endif %}
+                        </a>
+                        {% endif %}
+
+                    {% else %}
+                        <!-- Guest: Login & Register -->
+                        <a class="nav-link text-white" href="{{ url_for('auth.login') }}" style="font-size: 0.9rem;">
+                            <i class="bi bi-person me-1"></i>Login
+                        </a>
+                        <a class="btn btn-nav-login" href="{{ url_for('auth.register') }}">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- ========== FLASH MESSAGES ========== -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="container mt-3">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-custom alert-dismissible fade show"
+                 role="alert">
+                {% if category == 'success' %}
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                {% elif category == 'danger' or category == 'error' %}
+                    <i class="bi bi-x-circle-fill text-danger"></i>
+                {% elif category == 'warning' %}
+                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-info"></i>
+                {% endif %}
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer-custom">
+        <div class="container">
+            <div class="row g-4 mb-4">
+                <!-- Brand Column -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <i class="bi bi-shop text-primary fs-3"></i>
+                        <span class="font-heading fw-800 fs-4 text-white">ShopAnalytica</span>
+                    </div>
+                    <p class="text-slate-400 mb-4 small" style="max-width: 320px; line-height: 1.6;">
+                        Full-stack E-Commerce platform & business intelligence engine powered by Flask, MySQL, Pandas, and NumPy.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="footer-social-btn" aria-label="GitHub" title="Add your GitHub profile link"><i class="bi bi-github"></i></a>
+                        <a href="#" class="footer-social-btn" aria-label="LinkedIn" title="Add your LinkedIn profile link"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="footer-social-btn" aria-label="Twitter" title="Add your Twitter/X profile link"><i class="bi bi-twitter-x"></i></a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="font-heading fw-700 text-white mb-3">Quick Links</h6>
+                    <ul class="list-unstyled footer-links mb-0">
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('products.product_list') }}">Products Catalog</a></li>
+                        <li><a href="{{ url_for('orders.my_orders') }}">My Orders</a></li>
+                        <li><a href="{{ url_for('api.docs') }}">API v1 Docs</a></li>
+                    </ul>
+                </div>
+
+                <!-- Account -->
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="font-heading fw-700 text-white mb-3">User Account</h6>
+                    <ul class="list-unstyled footer-links mb-0">
+                        <li><a href="{{ url_for('auth.login') }}">Sign In</a></li>
+                        <li><a href="{{ url_for('auth.register') }}">Create Account</a></li>
+                        <li><a href="{{ url_for('cart.view_cart') }}">Shopping Cart</a></li>
+                        <li><a href="{{ url_for('auth.profile') }}">User Profile</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact Support -->
+                <div class="col-lg-4 col-md-6">
+                    <h6 class="font-heading fw-700 text-white mb-3">Customer Support</h6>
+                    <div class="d-flex flex-column gap-2 text-slate-400 small">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-headset text-primary"></i>
+                            <span>24/7 Customer Helpdesk &amp; Inquiry Center</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-envelope text-primary"></i>
+                            <span>support@shopanalytica.com</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-shield-check text-primary"></i>
+                            <span>Verified E-Commerce Platform</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-divider border-top border-slate-800 pt-4 mt-4 d-flex flex-column flex-md-row align-items-center justify-content-between text-slate-400 small gap-2">
+                <span>&copy; {{ 2026 }} ShopAnalytica. All rights reserved.</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-pill">
+                        Flask • MySQL • Pandas • Bootstrap 5
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- ========== SCRIPTS ========== -->
+    <!-- Bootstrap 5.3 JS Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

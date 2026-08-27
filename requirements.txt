@@ -1,0 +1,14 @@
+# ==================================================
+# E-Commerce Sales & Customer Analytics Platform
+# Python Dependencies
+# ==================================================
+
+Flask>=3.0.0
+mysql-connector-python>=9.0.0
+pandas>=2.0.0
+numpy>=1.26.0
+python-dotenv>=1.0.0
+Werkzeug>=3.0.0
+pytest>=8.0.0
+gunicorn>=22.0.0
+waitress>=3.0.0

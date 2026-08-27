@@ -1,0 +1,51 @@
+# ==================================================
+# .gitignore — E-Commerce Analytics Platform
+# ==================================================
+
+# Environment variables (NEVER commit)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+venv/
+env/
+.venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+.tox/
+
+# Generated reports
+reports/generated_reports/*.csv
+
+# Logs
+*.log
+
+# Database dumps
+*.sql.bak

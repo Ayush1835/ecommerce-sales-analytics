@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Product Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4 animate-fade-in-up">
+    <!-- Breadcrumbs & Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Products</li>
+                </ol>
+            </nav>
+            <h1 class="h3 font-heading mb-0">Product Catalog Management</h1>
+            <p class="text-muted small mb-0">Manage product details, stock levels, categories, and active status.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin.add_product') }}" class="btn btn-primary-custom d-inline-flex align-items-center gap-2">
+                <i class="bi bi-plus-lg"></i> Add New Product
+            </a>
+        </div>
+    </div>
+
+    <!-- Search & Quick Filters -->
+    <div class="bg-white p-3.5 rounded-4 border mb-4 shadow-sm">
+        <form action="{{ url_for('admin.products') }}" method="GET" class="row g-2 align-items-center">
+            <div class="col-md-9">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Search by product title or category name..." value="{{ search|default('') }}">
+                </div>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary-custom w-100">Search</button>
+                {% if search %}
+                <a href="{{ url_for('admin.products') }}" class="btn btn-outline-custom" title="Reset Search">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Products Table -->
+    <div class="bg-white rounded-4 border shadow-sm overflow-hidden">
+        {% if products %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th scope="col" class="ps-4" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Product</th>
+                        <th scope="col" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Category</th>
+                        <th scope="col" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Price</th>
+                        <th scope="col" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Stock</th>
+                        <th scope="col" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Rating</th>
+                        <th scope="col" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Status</th>
+                        <th scope="col" class="text-end pe-4" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                {% if p.image_url %}
+                                <img src="{{ p.image_url }}" alt="{{ p.name }}" class="rounded-3 border" style="width: 52px; height: 52px; object-fit: cover;">
+                                {% else %}
+                                <div class="bg-light text-muted d-flex align-items-center justify-content-center rounded-3 border" style="width: 52px; height: 52px;">
+                                    <i class="bi bi-image"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <a href="{{ url_for('products.product_detail', product_id=p.id) }}" class="fw-700 text-dark text-decoration-none font-heading" style="font-size: 0.95rem;">
+                                        {{ p.name }}
+                                    </a>
+                                    <div class="text-muted small">ID: #{{ p.id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border font-heading" style="font-weight: 600;">{{ p.category_name }}</span>
+                        </td>
+                        <td>
+                            <span class="fw-800 font-heading text-dark" style="font-size: 1rem;">₹{{ '{:,.2f}'.format(p.price) }}</span>
+                        </td>
+                        <td>
+                            {% if p.stock > 10 %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-700">{{ p.stock }} in stock</span>
+                            {% elif p.stock > 0 %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2.5 py-1 fw-700">Low: {{ p.stock }}</span>
+                            {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1 fw-700">Out of Stock</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-1 text-warning small">
+                                <i class="bi bi-star-fill"></i>
+                                <span class="fw-700 text-dark">{{ "%.1f"|format(p.rating|default(0)) }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if p.is_active %}
+                            <span class="badge bg-success text-white rounded-pill px-2.5 py-1"><i class="bi bi-check-circle-fill me-1"></i>Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary text-white rounded-pill px-2.5 py-1"><i class="bi bi-x-circle-fill me-1"></i>Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('admin.edit_product', product_id=p.id) }}" class="btn btn-sm btn-outline-custom d-inline-flex align-items-center gap-1" title="Edit Product">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+
+                                {% if p.is_active %}
+                                <form action="{{ url_for('admin.delete_product', product_id=p.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to deactivate {{ p.name }}?');" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1" title="Deactivate">
+                                        <i class="bi bi-eye-slash"></i> Disable
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form action="{{ url_for('admin.reactivate_product', product_id=p.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1" title="Reactivate">
+                                        <i class="bi bi-check2-circle"></i> Enable
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="px-4 py-3 bg-light border-top d-flex align-items-center justify-content-between text-muted small">
+            <span>Showing <strong>{{ products|length }}</strong> products</span>
+            <span>ShopAnalytica Inventory Management</span>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-box-seam text-muted display-4 mb-3"></i>
+            {% if search %}
+            <h5 class="fw-700 text-dark mb-1">No products found matching "{{ search }}"</h5>
+            <p class="text-muted small">Try searching with a different product title or category name.</p>
+            <a href="{{ url_for('admin.products') }}" class="btn btn-outline-custom mt-2">Clear Search Filter</a>
+            {% else %}
+            <h5 class="fw-700 text-dark mb-1">No Products Available</h5>
+            <p class="text-muted small">Get started by creating your first product item.</p>
+            <a href="{{ url_for('admin.add_product') }}" class="btn btn-primary-custom mt-2">Add New Product</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}My Account Profile - ShopAnalytica{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate-fade-in-up" style="max-width: 1080px;">
+    <!-- Profile Hero Banner Header -->
+    <div class="bg-white rounded-4 border shadow-sm p-4 mb-4">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4">
+            <div class="d-flex align-items-center gap-3.5">
+                <div class="avatar-circle rounded-circle text-white d-flex align-items-center justify-content-center fw-800 font-heading shadow-sm" style="width: 72px; height: 72px; font-size: 1.8rem; background: linear-gradient(135deg, #6366F1, #8B5CF6);">
+                    {{ user.name[0]|upper if user.name else 'U' }}
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <h2 class="h4 font-heading fw-800 text-dark mb-0">{{ user.name }}</h2>
+                        {% if user.role == 'admin' %}
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-700">
+                            <i class="bi bi-shield-lock-fill me-1"></i>Administrator
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-700">
+                            <i class="bi bi-check-circle-fill me-1"></i>Verified Customer
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="text-muted small d-flex align-items-center gap-3">
+                        <span><i class="bi bi-envelope me-1 text-primary"></i>{{ user.email }}</span>
+                        <span><i class="bi bi-calendar3 me-1 text-primary"></i>Joined {{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-custom">
+                    <i class="bi bi-house me-1"></i> Back to Store
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- LEFT COLUMN: Profile Edit Form -->
+        <div class="col-lg-8">
+            <div class="bg-white rounded-4 border shadow-sm p-4">
+                <div class="border-bottom pb-3 mb-4">
+                    <h5 class="font-heading fw-700 text-dark mb-1"><i class="bi bi-person-gear text-primary me-2"></i>Account Details</h5>
+                    <p class="text-muted small mb-0">Update your personal contact information and delivery address.</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('auth.profile') }}">
+                    <div class="row g-3">
+                        <!-- Full Name -->
+                        <div class="col-md-6">
+                            <label class="form-label text-dark fw-700 small" for="name">Full Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control border-start-0 ps-0" id="name" name="name" value="{{ user.name }}" required placeholder="Enter full name">
+                            </div>
+                        </div>
+
+                        <!-- Email Address (Disabled) -->
+                        <div class="col-md-6">
+                            <label class="form-label text-dark fw-700 small" for="email">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control border-start-0 ps-0 bg-light text-muted" id="email" value="{{ user.email }}" disabled style="cursor: not-allowed;">
+                            </div>
+                            <small class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-lock me-1"></i>Email address cannot be modified.</small>
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div class="col-md-6">
+                            <label class="form-label text-dark fw-700 small" for="phone">Phone Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-telephone"></i></span>
+                                <input type="tel" class="form-control border-start-0 ps-0" id="phone" name="phone" value="{{ user.phone or '' }}" placeholder="10-digit mobile number" maxlength="10">
+                            </div>
+                        </div>
+
+                        <!-- Member Since (Disabled) -->
+                        <div class="col-md-6">
+                            <label class="form-label text-dark fw-700 small">Member Since</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-calendar3"></i></span>
+                                <input type="text" class="form-control border-start-0 ps-0 bg-light text-muted" value="{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}" disabled style="cursor: not-allowed;">
+                            </div>
+                        </div>
+
+                        <!-- Delivery Address -->
+                        <div class="col-12">
+                            <label class="form-label text-dark fw-700 small" for="address">Primary Delivery Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted align-items-start pt-2.5"><i class="bi bi-geo-alt"></i></span>
+                                <textarea class="form-control border-start-0 ps-0" id="address" name="address" rows="3" placeholder="Street address, apartment, city, state, postal code">{{ user.address or '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 mt-4 border-top d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-custom">
+                            <i class="bi bi-arrow-left me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary-custom px-4 py-2.5 shadow-sm fw-700">
+                            <i class="bi bi-check2-circle me-1.5"></i> Save Profile Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Account Shortcuts & Security -->
+        <div class="col-lg-4">
+            <div class="d-flex flex-column gap-4">
+                <!-- Quick Navigation Card -->
+                <div class="bg-white rounded-4 border shadow-sm p-4">
+                    <h6 class="font-heading fw-700 text-dark mb-3 border-bottom pb-2">
+                        <i class="bi bi-compass text-primary me-2"></i>Account Launchpad
+                    </h6>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="{{ url_for('orders.my_orders') }}" class="btn btn-light text-start text-dark border p-3 rounded-3 d-flex align-items-center justify-content-between hover-lift">
+                            <div class="d-flex align-items-center gap-2.5">
+                                <i class="bi bi-receipt text-primary fs-5"></i>
+                                <div>
+                                    <div class="fw-700 font-heading small">My Order History</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">View past orders &amp; status tracking</div>
+                                </div>
+                            </div>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+
+                        <a href="{{ url_for('cart.view_cart') }}" class="btn btn-light text-start text-dark border p-3 rounded-3 d-flex align-items-center justify-content-between hover-lift">
+                            <div class="d-flex align-items-center gap-2.5">
+                                <i class="bi bi-cart3 text-success fs-5"></i>
+                                <div>
+                                    <div class="fw-700 font-heading small">Shopping Cart</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">Manage items saved in your cart</div>
+                                </div>
+                            </div>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+
+                        {% if user.role == 'admin' %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-light text-start text-dark border p-3 rounded-3 d-flex align-items-center justify-content-between hover-lift">
+                            <div class="d-flex align-items-center gap-2.5">
+                                <i class="bi bi-speedometer2 text-info fs-5"></i>
+                                <div>
+                                    <div class="fw-700 font-heading small">Admin Dashboard</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">Platform management console</div>
+                                </div>
+                            </div>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Account Security Badge -->
+                <div class="bg-white rounded-4 border shadow-sm p-4">
+                    <h6 class="font-heading fw-700 text-dark mb-3 border-bottom pb-2">
+                        <i class="bi bi-shield-check text-success me-2"></i>Security &amp; Role
+                    </h6>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                            <i class="bi bi-key-fill"></i>
+                        </div>
+                        <div>
+                            <div class="fw-700 text-dark small">Password Encrypted</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Protected with Werkzeug PBKDF2 Hashing</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

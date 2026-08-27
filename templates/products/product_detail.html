@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - E-Commerce Platform{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate-fade-in-up">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-5">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-decoration-none text-muted">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('products.product_list') }}" class="text-decoration-none text-muted">Products</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Product Details -->
+    <div class="row gx-lg-5 mb-5">
+        <!-- Image Section -->
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="rounded-custom-lg shadow-custom overflow-hidden bg-white p-4 d-flex align-items-center justify-content-center" style="min-height: 500px;">
+                <img src="{{ product.image_url }}" alt="{{ product.name }}" class="img-fluid object-fit-contain w-100" style="max-height: 450px;" onerror="this.src='https://placehold.co/400x400/e2e8f0/94a3b8?text=No+Image'">
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="col-lg-6">
+            <span class="badge bg-light text-muted px-3 py-2 rounded-pill text-uppercase mb-3">{{ product.category_name }}</span>
+            <h2 class="fw-800 text-dark mb-3" style="font-weight: 800;">{{ product.name }}</h2>
+            
+            <div class="d-flex align-items-center mb-4">
+                <div class="text-warning me-2">
+                    {% set rating_int = product.rating|round(0, 'floor')|int %}
+                    {% for i in range(5) %}
+                        {% if i < rating_int %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <span class="text-muted">({{ product.rating|round(1) }} rating)</span>
+            </div>
+
+            <div class="price-tag fw-bold text-primary display-5 mb-3">₹{{ '{:,.0f}'.format(product.price) }}</div>
+            
+            <div class="mb-4">
+                {% if product.stock > 10 %}
+                    <span class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i> In Stock ({{ product.stock }} available)</span>
+                {% elif product.stock > 0 %}
+                    <span class="text-warning fw-bold"><i class="fas fa-exclamation-circle me-1"></i> Low Stock ({{ product.stock }} left)</span>
+                {% else %}
+                    <span class="text-danger fw-bold"><i class="fas fa-times-circle me-1"></i> Out of Stock</span>
+                {% endif %}
+            </div>
+
+            <p class="text-muted mb-5 lh-lg">{{ product.description }}</p>
+
+            <form action="{{ url_for('cart.add', product_id=product.id) }}" method="POST" class="mb-5">
+                <div class="row g-3 align-items-center mb-4">
+                    <div class="col-auto">
+                        <label for="quantity" class="col-form-label fw-bold">Quantity:</label>
+                    </div>
+                    <div class="col-auto">
+                        <div class="input-group" style="width: 140px;">
+                            <button class="btn btn-outline-secondary px-3" type="button" onclick="document.getElementById('quantity').stepDown()">-</button>
+                            <input type="number" id="quantity" name="quantity" class="form-control text-center" value="1" min="1" max="{{ product.stock if product.stock > 0 else 1 }}" {% if product.stock == 0 %}disabled{% endif %}>
+                            <button class="btn btn-outline-secondary px-3" type="button" onclick="document.getElementById('quantity').stepUp()">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary-custom btn-lg w-100 rounded-pill py-3 fw-bold shadow-sm" {% if product.stock == 0 %}disabled{% endif %}>
+                    <i class="bi bi-cart-plus me-2"></i> Add to Cart
+                </button>
+            </form>
+
+            <div class="row g-3 border-top pt-4">
+                <div class="col-4 text-center">
+                    <div class="text-primary mb-2 fs-4"><i class="bi bi-truck"></i></div>
+                    <div class="small fw-bold text-dark">Free Delivery</div>
+                    <div class="small text-muted">On orders over ₹500</div>
+                </div>
+                <div class="col-4 text-center border-start border-end">
+                    <div class="text-primary mb-2 fs-4"><i class="bi bi-shield-check"></i></div>
+                    <div class="small fw-bold text-dark">Secure Payment</div>
+                    <div class="small text-muted">100% safe checkout</div>
+                </div>
+                <div class="col-4 text-center">
+                    <div class="text-primary mb-2 fs-4"><i class="bi bi-arrow-counterclockwise"></i></div>
+                    <div class="small fw-bold text-dark">Easy Returns</div>
+                    <div class="small text-muted">7 days return policy</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="mt-5 pt-5 border-top">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold mb-0">Related Products</h3>
+        </div>
+        
+        <div class="row g-4 stagger-children">
+            {% for rp in related_products %}
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card h-100 product-card border-0 shadow-sm">
+                    <div class="product-img-wrapper position-relative overflow-hidden">
+                        <a href="{{ url_for('products.product_detail', product_id=rp.id) }}">
+                            <img src="{{ rp.image_url }}" alt="{{ rp.name }}" class="card-img-top object-fit-cover" onerror="this.src='https://placehold.co/400x400/e2e8f0/94a3b8?text=No+Image'" style="height: 200px;">
+                        </a>
+                        {% if rp.stock == 0 %}
+                            <span class="badge badge-out-of-stock position-absolute top-0 end-0 m-3 px-3 py-2 bg-danger text-white rounded-pill">Out of Stock</span>
+                        {% elif rp.stock > 0 and rp.stock < 10 %}
+                            <span class="badge badge-low-stock position-absolute top-0 end-0 m-3 px-3 py-2 bg-warning text-dark rounded-pill">Low Stock</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-body product-body d-flex flex-column p-3">
+                        <h6 class="card-title product-title mb-2">
+                            <a href="{{ url_for('products.product_detail', product_id=rp.id) }}" class="text-decoration-none text-dark">{{ rp.name }}</a>
+                        </h6>
+                        
+                        <div class="product-rating mb-2 text-warning small">
+                            {% set rating_int = rp.rating|round(0, 'floor')|int %}
+                            {% for i in range(5) %}
+                                {% if i < rating_int %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <span class="product-price fw-bold">₹{{ '{:,.0f}'.format(rp.price) }}</span>
+                            <button type="button" class="btn btn-cart rounded-circle shadow-sm btn-sm" {% if rp.stock == 0 %}disabled{% endif %} title="Add to Cart" onclick="window.location.href='#'">
+                                <i class="fas fa-shopping-cart text-primary"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

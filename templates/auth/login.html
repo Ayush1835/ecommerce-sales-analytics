@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Login - ShopAnalytica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-wrapper {
+        min-height: calc(100vh - 76px);
+    }
+    .auth-brand-panel {
+        background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    .auth-brand-panel h2 {
+        color: #fff;
+        font-weight: 800;
+        font-size: 2.2rem;
+        letter-spacing: -0.03em;
+        position: relative;
+        z-index: 1;
+    }
+    .auth-brand-panel p {
+        opacity: 0.85;
+        font-size: 1.05rem;
+        position: relative;
+        z-index: 1;
+        max-width: 350px;
+        text-align: center;
+    }
+    .auth-feature {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1.25rem;
+        background: rgba(255,255,255,0.08);
+        border-radius: var(--sa-radius);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.12);
+        font-size: 0.9rem;
+        position: relative;
+        z-index: 1;
+    }
+    .auth-feature i {
+        font-size: 1.2rem;
+        color: #818CF8;
+    }
+    .auth-form-panel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 2rem;
+        background: var(--sa-bg);
+    }
+    .auth-form-container {
+        width: 100%;
+        max-width: 460px;
+        background: #FFFFFF;
+        padding: 2.5rem;
+        border-radius: var(--sa-radius-lg);
+        box-shadow: var(--sa-shadow-lg);
+        border: 1px solid var(--sa-border);
+    }
+    .input-icon-wrapper {
+        position: relative;
+    }
+    .input-icon-wrapper i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--sa-text-subtle);
+        font-size: 1rem;
+    }
+    .input-icon-wrapper input {
+        padding-left: 2.75rem;
+        border-radius: var(--sa-radius);
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--sa-text-subtle);
+        cursor: pointer;
+        padding: 0;
+    }
+    .quick-login-btn {
+        border-radius: var(--sa-radius);
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 0.6rem 1rem;
+        transition: var(--sa-transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row g-0 auth-wrapper">
+        <!-- Left Panel — Brand -->
+        <div class="col-lg-5 d-none d-lg-flex auth-brand-panel">
+            <div class="mb-4">
+                <i class="bi bi-shop" style="font-size: 3.5rem; color: #818CF8;"></i>
+            </div>
+            <h2 class="mb-3 text-center">Welcome to<br>ShopAnalytica</h2>
+            <p class="mb-4">Full-stack e-commerce store &amp; Pandas business intelligence platform.</p>
+
+            <div class="d-flex flex-column gap-2 w-100" style="max-width: 320px;">
+                <div class="auth-feature">
+                    <i class="bi bi-shield-check"></i>
+                    <span>scrypt Password Hashing &amp; RBAC</span>
+                </div>
+                <div class="auth-feature">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>Pandas &amp; NumPy Sales Analytics</span>
+                </div>
+                <div class="auth-feature">
+                    <i class="bi bi-cart-check"></i>
+                    <span>Atomic Checkout Transactions</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel — Login Form -->
+        <div class="col-lg-7 auth-form-panel">
+            <div class="auth-form-container animate-fade-in-up">
+                <h2 class="mb-1 font-heading fw-800">Sign In</h2>
+                <p class="text-muted mb-4" style="font-size: 0.925rem;">Select a 1-Click Demo Login or enter your credentials</p>
+
+                <!-- 1-CLICK QUICK DEMO LOGIN BUTTONS -->
+                <div class="mb-4 p-3 rounded-4" style="background: var(--sa-surface-alt); border: 1px solid var(--sa-border);">
+                    <div class="d-flex align-items-center gap-2 mb-2 text-primary fw-700" style="font-size: 0.825rem; text-transform: uppercase; letter-spacing: 0.04em;">
+                        <i class="bi bi-lightning-charge-fill"></i> 1-Click Instant Demo Login
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-dark quick-login-btn text-white" onclick="quickLogin('admin@ecommerce.com', 'Password@123')">
+                            <i class="bi bi-shield-lock-fill text-warning"></i> Auto-Login as Admin
+                        </button>
+                        <button type="button" class="btn btn-outline-custom quick-login-btn" onclick="quickLogin('amit.patel@example.com', 'Password@123')">
+                            <i class="bi bi-person-circle text-primary"></i> Auto-Login as Customer
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center text-muted fs-7 mb-3">OR SIGN IN MANUALLY</div>
+
+                <form method="POST" action="{{ url_for('auth.login') }}" id="loginForm" novalidate>
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label class="form-label fw-600 mb-1" for="email" style="font-size: 0.875rem;">Email Address</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-envelope"></i>
+                            <input type="email" class="form-control" id="email"
+                                   name="email" value="{{ email|default('') }}"
+                                   placeholder="you@example.com" required autofocus>
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label class="form-label fw-600 mb-1" for="password" style="font-size: 0.875rem;">Password</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" class="form-control" id="password"
+                                   name="password" placeholder="Enter your password" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Fill Credentials Helper Chips -->
+                    <div class="mb-3 p-2.5 bg-light rounded-3 border d-flex flex-wrap align-items-center justify-content-between gap-1">
+                        <span class="text-muted small fw-600 me-1" style="font-size: 0.75rem;"><i class="bi bi-[#6366F1] bi-info-circle me-1"></i>Fill manual form:</span>
+                        <div class="d-flex gap-1.5">
+                            <button type="button" class="btn btn-sm btn-white bg-white text-dark border rounded-pill px-2.5 py-1 small fw-700" onclick="fillForm('admin@ecommerce.com', 'Password@123')">
+                                <i class="bi bi-shield-lock text-warning"></i> Admin
+                            </button>
+                            <button type="button" class="btn btn-sm btn-white bg-white text-dark border rounded-pill px-2.5 py-1 small fw-700" onclick="fillForm('amit.patel@example.com', 'Password@123')">
+                                <i class="bi bi-person text-primary"></i> Customer
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2.5 mb-3 fw-700" style="font-size: 1rem;">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                    </button>
+                </form>
+
+                <!-- Role RBAC Explanation -->
+                <div class="alert alert-primary-subtle text-primary border-0 rounded-3 p-2.5 mb-3 text-center small" style="font-size: 0.78rem;">
+                    <i class="bi bi-shield-check me-1"></i> <strong>Automatic RBAC Role Detection:</strong> Admin or Customer role is automatically assigned by the database upon signing in with your email &amp; password.
+                </div>
+
+                <!-- Register link -->
+                <p class="text-center mb-0 text-muted" style="font-size: 0.9rem;">
+                    Don't have an account?
+                    <a href="{{ url_for('auth.register') }}" class="fw-700 text-decoration-none">Create account</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function togglePassword(inputId, btn) {
+        var input = document.getElementById(inputId);
+        var icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    }
+
+    function fillForm(email, password) {
+        document.getElementById('email').value = email;
+        document.getElementById('password').value = password;
+    }
+
+    function quickLogin(email, password) {
+        fillForm(email, password);
+        document.getElementById('loginForm').submit();
+    }
+</script>
+{% endblock %}

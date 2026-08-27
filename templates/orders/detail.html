@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Details #{{ order.order_id }} - ShopAnalytica{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate-fade-in-up" style="max-width: 1140px;">
+    <!-- Breadcrumb & Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('orders.my_orders') }}">My Orders</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Order #{{ order.order_id }}</li>
+                </ol>
+            </nav>
+            <div class="d-flex align-items-center gap-3">
+                <h1 class="h3 font-heading mb-0">Order #{{ order.order_id }}</h1>
+                {% if order.order_status == 'Pending' %}
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1.5 fw-700">
+                    <i class="bi bi-clock-history me-1"></i>Pending
+                </span>
+                {% elif order.order_status == 'Confirmed' %}
+                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3 py-1.5 fw-700">
+                    <i class="bi bi-check2-square me-1"></i>Confirmed
+                </span>
+                {% elif order.order_status == 'Shipped' %}
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1.5 fw-700">
+                    <i class="bi bi-truck me-1"></i>Shipped
+                </span>
+                {% elif order.order_status == 'Delivered' %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 fw-700">
+                    <i class="bi bi-check-circle-fill me-1"></i>Delivered
+                </span>
+                {% elif order.order_status == 'Cancelled' %}
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1.5 fw-700">
+                    <i class="bi bi-x-circle-fill me-1"></i>Cancelled
+                </span>
+                {% else %}
+                <span class="badge bg-secondary text-white rounded-pill px-3 py-1.5 fw-700">
+                    {{ order.order_status }}
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-muted small mb-0 mt-1">Placed on {{ order.order_date }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin.orders') if session.get('user', {}).get('role') == 'admin' else url_for('orders.my_orders') }}" class="btn btn-outline-custom">
+                <i class="bi bi-arrow-left me-1"></i> Back to Orders
+            </a>
+        </div>
+    </div>
+
+    <!-- Timeline Stepper Tracker -->
+    {% if order.order_status == 'Cancelled' %}
+    <div class="alert alert-danger rounded-4 border-0 shadow-sm p-4 mb-4 d-flex align-items-center gap-3">
+        <i class="bi bi-x-circle-fill display-5 text-danger"></i>
+        <div>
+            <h6 class="fw-700 mb-1">Order Cancelled</h6>
+            <p class="mb-0 small text-danger-emphasis">This order was cancelled and is no longer active.</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-4 border p-4 shadow-sm mb-4">
+        <div class="position-relative mx-md-5 my-3">
+            <div class="progress position-absolute top-50 start-0 w-100 translate-middle-y" style="height: 4px; z-index: 0;">
+                {% set status_width = 15 %}
+                {% if order.order_status == 'Confirmed' %}{% set status_width = 45 %}{% endif %}
+                {% if order.order_status == 'Shipped' %}{% set status_width = 75 %}{% endif %}
+                {% if order.order_status == 'Delivered' %}{% set status_width = 100 %}{% endif %}
+                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ status_width }}%;"></div>
+            </div>
+            
+            <div class="d-flex justify-content-between position-relative" style="z-index: 1;">
+                <!-- Pending -->
+                <div class="text-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 shadow-sm {{ 'bg-primary text-white' if order.order_status in ['Pending', 'Confirmed', 'Shipped', 'Delivered'] else 'bg-light text-muted border' }}" style="width: 44px; height: 44px;">
+                        <i class="bi bi-clock-history fs-5"></i>
+                    </div>
+                    <small class="fw-700 d-block {{ 'text-primary' if order.order_status in ['Pending', 'Confirmed', 'Shipped', 'Delivered'] else 'text-muted' }}">Pending</small>
+                </div>
+                <!-- Confirmed -->
+                <div class="text-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 shadow-sm {{ 'bg-primary text-white' if order.order_status in ['Confirmed', 'Shipped', 'Delivered'] else 'bg-light text-muted border' }}" style="width: 44px; height: 44px;">
+                        <i class="bi bi-check2-square fs-5"></i>
+                    </div>
+                    <small class="fw-700 d-block {{ 'text-primary' if order.order_status in ['Confirmed', 'Shipped', 'Delivered'] else 'text-muted' }}">Confirmed</small>
+                </div>
+                <!-- Shipped -->
+                <div class="text-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 shadow-sm {{ 'bg-primary text-white' if order.order_status in ['Shipped', 'Delivered'] else 'bg-light text-muted border' }}" style="width: 44px; height: 44px;">
+                        <i class="bi bi-truck fs-5"></i>
+                    </div>
+                    <small class="fw-700 d-block {{ 'text-primary' if order.order_status in ['Shipped', 'Delivered'] else 'text-muted' }}">Shipped</small>
+                </div>
+                <!-- Delivered -->
+                <div class="text-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 shadow-sm {{ 'bg-primary text-white' if order.order_status == 'Delivered' else 'bg-light text-muted border' }}" style="width: 44px; height: 44px;">
+                        <i class="bi bi-check-circle-fill fs-5"></i>
+                    </div>
+                    <small class="fw-700 d-block {{ 'text-primary' if order.order_status == 'Delivered' else 'text-muted' }}">Delivered</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- Left Column: Items Breakdown -->
+        <div class="col-lg-8">
+            <div class="bg-white rounded-4 border shadow-sm overflow-hidden h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="px-4 py-3 bg-light border-bottom">
+                        <h6 class="font-heading mb-0 fw-700 text-dark">Items Ordered</h6>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th scope="col" class="ps-4" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Product Item</th>
+                                    <th scope="col" class="text-center" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Qty</th>
+                                    <th scope="col" class="text-end" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Unit Price</th>
+                                    <th scope="col" class="text-center" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Item Status</th>
+                                    <th scope="col" class="text-end pe-4" style="font-size: 0.75rem; text-transform: uppercase; color: var(--sa-text-muted);">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td class="ps-4 py-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if item.image_url %}
+                                            <img src="{{ item.image_url }}" class="rounded-3 border" style="width: 52px; height: 52px; object-fit: cover;" alt="{{ item.product_name }}">
+                                            {% else %}
+                                            <div class="bg-light text-muted d-flex align-items-center justify-content-center rounded-3 border" style="width: 52px; height: 52px;">
+                                                <i class="bi bi-image"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-700 text-dark font-heading" style="font-size: 0.95rem;">{{ item.product_name }}</div>
+                                                <span class="badge bg-light text-dark border small">{{ item.category_name }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center fw-700">{{ item.quantity }}</td>
+                                    {% set unit_price = (item.price|default(item.purchase_price|default(0)))|float %}
+                                    <td class="text-end text-muted">₹{{ "{:,.2f}".format(unit_price) }}</td>
+                                    <td class="text-center">
+                                        {% if order.order_status == 'Pending' %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2.5 py-1 fw-700 small">
+                                            <i class="bi bi-clock-history me-1"></i>Processing
+                                        </span>
+                                        {% elif order.order_status == 'Confirmed' %}
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1 fw-700 small">
+                                            <i class="bi bi-box-seam me-1"></i>Packed &amp; Ready
+                                        </span>
+                                        {% elif order.order_status == 'Shipped' %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-700 small">
+                                            <i class="bi bi-truck me-1"></i>In Transit
+                                        </span>
+                                        {% elif order.order_status == 'Delivered' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-700 small">
+                                            <i class="bi bi-check-circle-fill me-1"></i>Delivered
+                                        </span>
+                                        {% elif order.order_status == 'Cancelled' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1 fw-700 small">
+                                            <i class="bi bi-x-circle-fill me-1"></i>Cancelled
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary text-white rounded-pill px-2.5 py-1 fw-700 small">
+                                            {{ order.order_status }}
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4 fw-800 font-heading text-dark">₹{{ "{:,.2f}".format(unit_price * (item.quantity|default(1)|int)) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-light border-top">
+                    <div class="d-flex flex-column align-items-end ms-auto" style="max-width: 320px;">
+                        <div class="d-flex justify-content-between mb-2 w-100">
+                            <span class="text-muted">Subtotal</span>
+                            <span class="fw-700">₹{{ "{:,.2f}".format(order.total_amount|default(0)) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3 w-100 border-bottom pb-2">
+                            <span class="text-muted">Delivery Charges</span>
+                            <span class="text-success fw-700">Free</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center w-100">
+                            <h6 class="mb-0 fw-800 font-heading">Total Paid</h6>
+                            <h4 class="mb-0 fw-800 text-primary font-heading">₹{{ "{:,.2f}".format(order.total_amount|default(0)) }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Customer & Payment Summary -->
+        <div class="col-lg-4">
+            <div class="d-flex flex-column gap-4">
+                <!-- Customer Info -->
+                <div class="bg-white rounded-4 border p-4 shadow-sm">
+                    <h6 class="fw-700 font-heading mb-3 border-bottom pb-2">
+                        <i class="bi bi-person-fill text-primary me-2"></i>Customer Information
+                    </h6>
+                    <div class="fw-700 text-dark mb-1 fs-6">{{ order.customer_name }}</div>
+                    <div class="text-muted small mb-1"><i class="bi bi-envelope me-2"></i>{{ order.customer_email }}</div>
+                    {% if order.customer_phone %}
+                    <div class="text-muted small"><i class="bi bi-telephone me-2"></i>{{ order.customer_phone }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="bg-white rounded-4 border p-4 shadow-sm">
+                    <h6 class="fw-700 font-heading mb-3 border-bottom pb-2">
+                        <i class="bi bi-geo-alt-fill text-primary me-2"></i>Shipping Address
+                    </h6>
+                    <p class="text-dark small mb-0" style="line-height: 1.6;">{{ order.shipping_address|default('Standard Delivery Address', true) }}</p>
+                </div>
+
+                <!-- Payment Summary -->
+                <div class="bg-white rounded-4 border p-4 shadow-sm">
+                    <h6 class="fw-700 font-heading mb-3 border-bottom pb-2">
+                        <i class="bi bi-credit-card-fill text-primary me-2"></i>Payment Summary
+                    </h6>
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Payment Method</span>
+                        <span class="fw-700 text-dark">{{ order.payment_method }}</span>
+                    </div>
+                    {% if order.transaction_id %}
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Transaction ID</span>
+                        <span class="fw-600 text-dark small font-monospace">{{ order.transaction_id }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Payment Status</span>
+                        {% if order.payment_status == 'Paid' or order.payment_status == 'Completed' %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-700">Paid</span>
+                        {% elif order.payment_status == 'Pending' %}
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1 fw-700">Pending</span>
+                        {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1 fw-700">{{ order.payment_status }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if order.order_status in ['Pending', 'Confirmed'] %}
+                <!-- Cancel Action Button -->
+                <div class="mt-auto">
+                    <form action="{{ url_for('orders.cancel', order_id=order.order_id) }}" method="POST">
+                        <button type="submit" class="btn btn-outline-danger w-100 py-2.5 fw-700 rounded-3" onclick="return confirm('Are you sure you want to cancel Order #{{ order.order_id }}?');">
+                            <i class="bi bi-x-circle me-1.5"></i> Cancel Order
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
