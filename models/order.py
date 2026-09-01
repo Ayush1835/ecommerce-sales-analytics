@@ -111,9 +111,9 @@ def create_order_checkout(user_id, shipping_address, payment_method):
         transaction_id = generate_transaction_id()
 
         run_sql(
-            """INSERT INTO payments (order_id, payment_method, payment_status, transaction_id)
-               VALUES (%s, %s, %s, %s)""",
-            (order_id, payment_method, payment_status, transaction_id)
+            """INSERT INTO payments (order_id, payment_method, payment_status, transaction_id, amount)
+               VALUES (%s, %s, %s, %s, %s)""",
+            (order_id, payment_method, payment_status, transaction_id, round(total_amount, 2))
         )
 
         # 6. Clear user's cart items
