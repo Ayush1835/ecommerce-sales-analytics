@@ -26,7 +26,7 @@
                     </div>
                     <div class="text-muted small d-flex align-items-center gap-3">
                         <span><i class="bi bi-envelope me-1 text-primary"></i>{{ user.email }}</span>
-                        <span><i class="bi bi-calendar3 me-1 text-primary"></i>Joined {{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</span>
+                        <span><i class="bi bi-calendar3 me-1 text-primary"></i>Joined {{ user.created_at.strftime('%B %d, %Y') if user.created_at and user.created_at.strftime is defined else (user.created_at if user.created_at else 'N/A') }}</span>
                     </div>
                 </div>
             </div>
@@ -82,7 +82,7 @@
                             <label class="form-label text-dark fw-700 small">Member Since</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-calendar3"></i></span>
-                                <input type="text" class="form-control border-start-0 ps-0 bg-light text-muted" value="{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}" disabled style="cursor: not-allowed;">
+                                <input type="text" class="form-control border-start-0 ps-0 bg-light text-muted" value="{{ user.created_at.strftime('%B %d, %Y') if user.created_at and user.created_at.strftime is defined else (user.created_at if user.created_at else 'N/A') }}" disabled style="cursor: not-allowed;">
                             </div>
                         </div>
 
