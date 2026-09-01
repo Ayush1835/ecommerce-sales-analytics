@@ -8,6 +8,9 @@
 
 import os
 import sqlite3
+import random
+from datetime import datetime, timedelta
+from werkzeug.security import generate_password_hash
 import mysql.connector
 from mysql.connector import pooling, Error
 from config import Config
@@ -32,7 +35,7 @@ except Exception as e:
     db_pool = None
 
 # SQLite Fallback Path & Setup
-SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'app_v12.db')
+SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'app_v13.db')
 
 
 def init_sqlite_db():
