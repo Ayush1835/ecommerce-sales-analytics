@@ -32,7 +32,7 @@ except Exception as e:
     db_pool = None
 
 # SQLite Fallback Path & Setup
-SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'app_v6.db')
+SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'app_v8.db')
 
 
 def init_sqlite_db():
@@ -256,27 +256,53 @@ def init_sqlite_db():
         ]
         cursor.executemany("INSERT INTO products (category_id, name, description, price, stock, image_url, rating, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", products)
 
-        # Seed historical orders & payments for analytics
-        orders_data = [
-            (3, 49999.00, 'Delivered', 'Navrangpura, Ahmedabad', '2026-08-01 10:30:00'),
-            (4, 14999.00, 'Delivered', 'Banjara Hills, Hyderabad', '2026-08-03 14:20:00'),
-            (5, 1899.00, 'Confirmed', 'Sector 17, Chandigarh', '2026-08-05 09:15:00'),
-            (6, 1999.00, 'Delivered', 'Indiranagar, Bengaluru', '2026-08-08 16:45:00'),
-            (7, 499.00, 'Delivered', 'Kaloor, Kochi', '2026-08-10 11:00:00'),
-            (8, 68999.00, 'Delivered', 'Salt Lake, Kolkata', '2026-08-12 15:30:00'),
-            (9, 899.00, 'Delivered', 'Connaught Place, New Delhi', '2026-08-14 18:00:00'),
-            (10, 1599.00, 'Delivered', 'Kothrud, Pune', '2026-08-16 12:10:00'),
-            (11, 2299.00, 'Delivered', 'T. Nagar, Chennai', '2026-08-18 17:40:00'),
-            (12, 5999.00, 'Delivered', 'Marine Drive, Mumbai', '2026-08-20 13:25:00'),
-            (13, 3499.00, 'Delivered', 'Civil Lines, Jaipur', '2026-08-22 10:05:00'),
-            (14, 499.00, 'Pending', 'Viman Nagar, Pune', '2026-08-25 19:50:00')
-        ]
+        # Seed 120+ historical orders & payments across 365 days yielding 2M+ revenue
+        cursor.execute("SELECT id, address FROM users WHERE role = 'customer'")
+        cust_records = cursor.fetchall()
+        cursor.execute("SELECT id, price FROM products")
+        prod_records = cursor.fetchall()
 
-        for u_id, amt, status, addr, dt in orders_data:
-            cursor.execute("INSERT INTO orders (user_id, total_amount, order_status, shipping_address, order_date) VALUES (?, ?, ?, ?, ?)", (u_id, amt, status, addr, dt))
-            o_id = cursor.lastrowid
-            cursor.execute("INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) VALUES (?, 1, 1, ?, ?)", (o_id, amt, amt))
-            cursor.execute("INSERT INTO payments (order_id, payment_method, transaction_id, amount, payment_status, payment_date) VALUES (?, 'UPI', ?, ?, 'Completed', ?)", (o_id, f"TXN_SEED_{o_id}88", amt, dt))
+        if cust_records and prod_records:
+            now = datetime.now()
+            order_statuses = ['Delivered', 'Delivered', 'Delivered', 'Shipped', 'Confirmed', 'Pending', 'Cancelled']
+            payment_methods = ['UPI', 'Card', 'Cash on Delivery']
+
+            for c_id, address in cust_records:
+                num_orders = random.randint(6, 12)
+                for _ in range(num_orders):
+                    days_ago = random.randint(1, 365)
+                    order_date_str = (now - timedelta(days=days_ago, hours=random.randint(0, 23), minutes=random.randint(0, 59))).strftime('%Y-%m-%d %H:%M:%S')
+                    status = random.choice(order_statuses)
+                    num_items = random.randint(1, 5)
+                    chosen_prods = random.sample(prod_records, num_items)
+
+                    total_amt = 0
+                    items_to_insert = []
+                    for p_id, p_price in chosen_prods:
+                        qty = random.randint(1, 3)
+                        p_val = float(p_price)
+                        total_amt += (p_val * qty)
+                        items_to_insert.append((p_id, qty, p_val))
+
+                    cursor.execute(
+                        "INSERT INTO orders (user_id, total_amount, order_status, shipping_address, order_date) VALUES (?, ?, ?, ?, ?)",
+                        (c_id, round(total_amt, 2), status, address or "Main Street, City", order_date_str)
+                    )
+                    o_id = cursor.lastrowid
+
+                    for p_id, qty, p_val in items_to_insert:
+                        cursor.execute(
+                            "INSERT INTO order_items (order_id, product_id, quantity, price, unit_price, subtotal) VALUES (?, ?, ?, ?, ?, ?)",
+                            (o_id, p_id, qty, p_val, p_val, p_val * qty)
+                        )
+
+                    pm = random.choice(payment_methods)
+                    p_status = 'Completed' if status == 'Delivered' else ('Refunded' if status == 'Cancelled' else 'Pending')
+                    txn_id = f"TXN{''.join(random.choices('0123456789', k=10))}"
+                    cursor.execute(
+                        "INSERT INTO payments (order_id, payment_method, payment_status, transaction_id, payment_date, amount) VALUES (?, ?, ?, ?, ?, ?)",
+                        (o_id, pm, p_status, txn_id, order_date_str, round(total_amt, 2))
+                    )
 
         conn.commit()
 
