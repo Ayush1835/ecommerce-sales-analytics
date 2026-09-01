@@ -32,7 +32,7 @@ except Exception as e:
     db_pool = None
 
 # SQLite Fallback Path & Setup
-SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'app_v8.db')
+SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'app_v9.db')
 
 
 def init_sqlite_db():
@@ -306,6 +306,11 @@ def init_sqlite_db():
 
         conn.commit()
 
+    # Always guarantee password_hash for admin@ecommerce.com and amit.patel@example.com is Password@123
+    from werkzeug.security import generate_password_hash
+    pass_123 = generate_password_hash("Password@123")
+    cursor.execute("UPDATE users SET password_hash = ? WHERE email IN ('admin@ecommerce.com', 'amit.patel@example.com')", (pass_123,))
+    conn.commit()
     conn.close()
 
 
