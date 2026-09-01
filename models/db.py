@@ -32,7 +32,7 @@ except Exception as e:
     db_pool = None
 
 # SQLite Fallback Path & Setup
-SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'app_v2.db')
+SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'app_v4.db')
 
 
 def init_sqlite_db():
@@ -62,24 +62,44 @@ def init_sqlite_db():
 
     CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category_id INTEGER NOT NULL,
         name TEXT NOT NULL,
         description TEXT,
         price REAL NOT NULL,
-        stock_quantity INTEGER NOT NULL DEFAULT 0,
-        category_id INTEGER,
+        stock INTEGER NOT NULL DEFAULT 0,
         image_url TEXT,
+        rating REAL DEFAULT 0.0,
+        is_active INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (category_id) REFERENCES categories(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS cart (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL UNIQUE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS cart_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cart_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (cart_id) REFERENCES cart(id),
+        FOREIGN KEY (product_id) REFERENCES products(id)
     );
 
     CREATE TABLE IF NOT EXISTS orders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         total_amount REAL NOT NULL,
-        status TEXT NOT NULL DEFAULT 'pending',
+        order_status TEXT NOT NULL DEFAULT 'Pending',
         shipping_address TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id)
     );
@@ -101,7 +121,7 @@ def init_sqlite_db():
         payment_method TEXT NOT NULL,
         transaction_id TEXT NOT NULL UNIQUE,
         amount REAL NOT NULL,
-        status TEXT NOT NULL DEFAULT 'completed',
+        payment_status TEXT NOT NULL DEFAULT 'Completed',
         payment_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (order_id) REFERENCES orders(id)
     );
@@ -113,45 +133,59 @@ def init_sqlite_db():
     if cursor.fetchone()[0] == 0:
         from werkzeug.security import generate_password_hash
         pass_123 = generate_password_hash("Password@123")
-        admin_pass = generate_password_hash("Admin@123")
 
-        # Seed both admin and customer credentials matching template buttons
-        cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES ('System Admin', 'admin@ecommerce.com', ?, 'admin')", (pass_123,))
-        cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES ('System Admin Alt', 'admin@shopanalytica.com', ?, 'admin')", (admin_pass,))
-        cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES ('Amit Patel', 'amit.patel@example.com', ?, 'customer')", (pass_123,))
-        cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES ('Demo Customer', 'customer@shopanalytica.com', ?, 'customer')", (pass_123,))
+        # Seed Rajesh Kumar as Admin and Indian Customers
+        cursor.execute("INSERT INTO users (name, email, password_hash, role, phone, address) VALUES ('Rajesh Kumar', 'admin@ecommerce.com', ?, 'admin', '9876543200', 'Connaught Place, New Delhi')", (pass_123,))
+        cursor.execute("INSERT INTO users (name, email, password_hash, role, phone, address) VALUES ('Priya Sharma', 'priya.admin@ecommerce.com', ?, 'admin', '9876543201', 'Bandra West, Mumbai')", (pass_123,))
+        cursor.execute("INSERT INTO users (name, email, password_hash, role, phone, address) VALUES ('Amit Patel', 'amit.patel@example.com', ?, 'customer', '9876543210', 'Navrangpura, Ahmedabad')", (pass_123,))
+        cursor.execute("INSERT INTO users (name, email, password_hash, role, phone, address) VALUES ('Sneha Reddy', 'sneha.reddy@example.com', ?, 'customer', '9876543211', 'Banjara Hills, Hyderabad')", (pass_123,))
+        cursor.execute("INSERT INTO users (name, email, password_hash, role, phone, address) VALUES ('Vikram Singh', 'vikram.singh@example.com', ?, 'customer', '9876543212', 'Sector 17, Chandigarh')", (pass_123,))
+        cursor.execute("INSERT INTO users (name, email, password_hash, role, phone, address) VALUES ('Neha Gupta', 'neha.gupta@example.com', ?, 'customer', '9876543213', 'Indiranagar, Bengaluru')", (pass_123,))
+        cursor.execute("INSERT INTO users (name, email, password_hash, role, phone, address) VALUES ('Arjun Nair', 'arjun.nair@example.com', ?, 'customer', '9876543214', 'Kaloor, Kochi')", (pass_123,))
 
         categories = [
-            ("Electronics", "Gadgets and devices"),
-            ("Fashion", "Clothing and accessories"),
-            ("Home & Kitchen", "Appliances and decor"),
-            ("Books", "Printed and digital books"),
-            ("Sports", "Fitness and outdoor gear")
+            ("Electronics", "Gadgets, devices, and electronic appliances"),
+            ("Fashion - Men", "Apparel, footwear, and accessories for men"),
+            ("Fashion - Women", "Apparel, footwear, and accessories for women"),
+            ("Home & Kitchen", "Furniture, cookware, decor, and home essentials"),
+            ("Books", "Fiction, non-fiction, academic, and self-help books"),
+            ("Sports & Fitness", "Fitness gear, sports equipment, and activewear")
         ]
         cursor.executemany("INSERT INTO categories (name, description) VALUES (?, ?)", categories)
 
         products = [
-            ("Wireless Noise-Canceling Headphones", "Premium over-ear headphones with 30hr battery life.", 14999.00, 45, 1, "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500"),
-            ("Smart OLED TV 55-inch", "4K Ultra HD Display with Dolby Vision and Gaming Mode.", 54999.00, 20, 1, "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=500"),
-            ("Ergonomic Mechanical Keyboard", "RGB Backlit keyboard with tactile blue switches.", 4500.00, 80, 1, "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500"),
-            ("Men's Tailored Slim Fit Suit", "Italian wool blend suit jacket and trousers.", 8999.00, 35, 2, "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500"),
-            ("Women's Leather Crossbody Bag", "Genuine full-grain leather handbag with gold accents.", 3200.00, 50, 2, "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500"),
-            ("Automatic Espresso Coffee Machine", "15-Bar Italian pump with milk frother wand.", 18500.00, 15, 3, "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=500"),
-            ("Non-Stick Ceramic Cookware Set", "10-Piece eco-friendly induction pot and pan set.", 6499.00, 40, 3, "https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=500"),
-            ("System Design & Distributed Systems Book", "Hardcover reference for scalable architecture.", 1299.00, 100, 4, "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500"),
-            ("Pro Yoga & Fitness Mat", "Extra thick non-slip eco-TPE exercise mat.", 1499.00, 60, 5, "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=500")
+            (1, "Smartphone X Pro 256GB", "6.7-inch AMOLED display, 108MP camera, 5000mAh battery", 49999.00, 45, "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500", 4.7, 1),
+            (1, "Wireless Noise-Canceling Headphones", "Active noise cancellation, 30-hour battery life", 14999.00, 30, "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500", 4.5, 1),
+            (1, "Ultra-Slim 15.6\" Laptop", "Intel i7 13th Gen, 16GB RAM, 512GB SSD", 68999.00, 20, "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500", 4.6, 1),
+            (2, "Classic Fit Cotton Polo T-Shirt", "100% breathable pique cotton, ribbed collar", 899.00, 100, "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500", 4.2, 1),
+            (2, "Slim Fit Stretch Denim Jeans", "Comfortable stretch fabric, dark indigo wash", 1899.00, 80, "https://images.unsplash.com/photo-1542272604-780c96856592?w=500", 4.4, 1),
+            (3, "Floral Print Anarkali Kurta", "Rayon fabric, embroidered neckline, includes dupatta", 1599.00, 90, "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=500", 4.6, 1),
+            (4, "Non-Stick Cookware Set (3-Piece)", "Teflon coated fry pan, kadai with lid, tawa", 1999.00, 50, "https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=500", 4.4, 1),
+            (5, "Atomic Habits by James Clear", "An easy & proven way to build good habits & break bad ones", 499.00, 120, "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500", 4.9, 1),
+            (6, "Pro Yoga & Fitness Mat", "Extra thick non-slip eco-TPE exercise mat", 1499.00, 60, "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=500", 4.6, 1)
         ]
-        cursor.executemany("INSERT INTO products (name, description, price, stock_quantity, category_id, image_url) VALUES (?, ?, ?, ?, ?, ?)", products)
+        cursor.executemany("INSERT INTO products (category_id, name, description, price, stock, image_url, rating, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", products)
 
-        # Seed initial order and payment for analytics
-        cursor.execute("INSERT INTO orders (user_id, total_amount, status, shipping_address) VALUES (3, 14999.00, 'completed', '124 Main St, City')", ())
-        order_id = cursor.lastrowid
-        cursor.execute("INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) VALUES (?, 1, 1, 14999.00, 14999.00)", (order_id,))
-        cursor.execute("INSERT INTO payments (order_id, payment_method, transaction_id, amount, status) VALUES (?, 'Credit Card', 'TXN_SEED_999', 14999.00, 'completed')", (order_id,))
+        # Seed sample orders and payments for analytics
+        orders_data = [
+            (3, 49999.00, 'Delivered', 'Navrangpura, Ahmedabad', '2026-08-10 10:30:00'),
+            (4, 14999.00, 'Delivered', 'Banjara Hills, Hyderabad', '2026-08-12 14:20:00'),
+            (5, 1899.00, 'Confirmed', 'Sector 17, Chandigarh', '2026-08-15 09:15:00'),
+            (6, 1999.00, 'Pending', 'Indiranagar, Bengaluru', '2026-08-20 16:45:00'),
+            (7, 499.00, 'Delivered', 'Kaloor, Kochi', '2026-08-25 11:00:00')
+        ]
+
+        for u_id, amt, status, addr, dt in orders_data:
+            cursor.execute("INSERT INTO orders (user_id, total_amount, order_status, shipping_address, order_date) VALUES (?, ?, ?, ?, ?)", (u_id, amt, status, addr, dt))
+            o_id = cursor.lastrowid
+            cursor.execute("INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) VALUES (?, 1, 1, ?, ?)", (o_id, amt, amt))
+            cursor.execute("INSERT INTO payments (order_id, payment_method, transaction_id, amount, payment_status, payment_date) VALUES (?, 'UPI', ?, ?, 'Completed', ?)", (o_id, f"TXN_SEED_{o_id}88", amt, dt))
 
         conn.commit()
 
     conn.close()
+
+
 
 
 
