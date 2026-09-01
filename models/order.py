@@ -33,15 +33,26 @@ def create_order_checkout(user_id, shipping_address, payment_method):
 
     Returns: (order_id, None) on success, or (None, error_message) on failure.
     """
+    from models.db import db_pool
+    is_sqlite = db_pool is None
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+
+    if is_sqlite:
+        cursor = conn.cursor()
+    else:
+        cursor = conn.cursor(dictionary=True)
+
+    def run_sql(q, p=()):
+        if is_sqlite:
+            q = q.replace('%s', '?')
+        cursor.execute(q, p)
 
     try:
-        # Start transaction explicitly
-        conn.autocommit = False
+        if not is_sqlite:
+            conn.autocommit = False
 
         # 1. Fetch cart items
-        cursor.execute(
+        run_sql(
             """SELECT ci.product_id, ci.quantity, p.name, p.price, p.stock, p.is_active
                FROM cart c
                JOIN cart_items ci ON c.id = ci.cart_id
@@ -50,6 +61,8 @@ def create_order_checkout(user_id, shipping_address, payment_method):
             (user_id,)
         )
         cart_items = cursor.fetchall()
+        if is_sqlite and cart_items:
+            cart_items = [dict(r) for r in cart_items]
 
         if not cart_items:
             conn.rollback()
@@ -69,10 +82,9 @@ def create_order_checkout(user_id, shipping_address, payment_method):
             total_amount += line_total
 
         # 3. Create Order
-        # COD is Pending, Card/UPI is Confirmed
         initial_order_status = 'Confirmed' if payment_method in ['Card', 'UPI'] else 'Pending'
 
-        cursor.execute(
+        run_sql(
             """INSERT INTO orders (user_id, total_amount, order_status, shipping_address)
                VALUES (%s, %s, %s, %s)""",
             (user_id, total_amount, initial_order_status, shipping_address)
@@ -81,15 +93,15 @@ def create_order_checkout(user_id, shipping_address, payment_method):
 
         # 4. Insert Order Items & Deduct Stock
         for item in cart_items:
-            # Snapshot of historical price
-            cursor.execute(
-                """INSERT INTO order_items (order_id, product_id, quantity, price)
-                   VALUES (%s, %s, %s, %s)""",
-                (order_id, item['product_id'], item['quantity'], item['price'])
+            p_val = float(item['price'])
+            run_sql(
+                """INSERT INTO order_items (order_id, product_id, quantity, price, unit_price, subtotal)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                (order_id, item['product_id'], item['quantity'], p_val, p_val, p_val * item['quantity'])
             )
 
             # Deduct stock
-            cursor.execute(
+            run_sql(
                 """UPDATE products SET stock = stock - %s WHERE id = %s""",
                 (item['quantity'], item['product_id'])
             )
@@ -98,17 +110,15 @@ def create_order_checkout(user_id, shipping_address, payment_method):
         payment_status = 'Completed' if payment_method in ['Card', 'UPI'] else 'Pending'
         transaction_id = generate_transaction_id()
 
-        cursor.execute(
+        run_sql(
             """INSERT INTO payments (order_id, payment_method, payment_status, transaction_id)
                VALUES (%s, %s, %s, %s)""",
             (order_id, payment_method, payment_status, transaction_id)
         )
 
         # 6. Clear user's cart items
-        cursor.execute(
-            """DELETE ci FROM cart_items ci
-               JOIN cart c ON ci.cart_id = c.id
-               WHERE c.user_id = %s""",
+        run_sql(
+            """DELETE FROM cart_items WHERE cart_id IN (SELECT id FROM cart WHERE user_id = %s)""",
             (user_id,)
         )
 
@@ -195,11 +205,23 @@ def cancel_order(order_id, user_id=None):
     Restores product stock and updates payment status.
     Executes inside an atomic transaction.
     """
+    from models.db import db_pool
+    is_sqlite = db_pool is None
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+
+    if is_sqlite:
+        cursor = conn.cursor()
+    else:
+        cursor = conn.cursor(dictionary=True)
+
+    def run_sql(q, p=()):
+        if is_sqlite:
+            q = q.replace('%s', '?')
+        cursor.execute(q, p)
 
     try:
-        conn.autocommit = False
+        if not is_sqlite:
+            conn.autocommit = False
 
         # 1. Fetch order
         query = "SELECT id, order_status FROM orders WHERE id = %s"
@@ -208,8 +230,10 @@ def cancel_order(order_id, user_id=None):
             query += " AND user_id = %s"
             params.append(user_id)
 
-        cursor.execute(query, tuple(params))
+        run_sql(query, tuple(params))
         order = cursor.fetchone()
+        if is_sqlite and order:
+            order = dict(order)
 
         if not order:
             conn.rollback()
@@ -220,23 +244,25 @@ def cancel_order(order_id, user_id=None):
             return False, f"Order cannot be cancelled because it is already '{order['order_status']}'."
 
         # 2. Fetch order items to restore stock
-        cursor.execute("SELECT product_id, quantity FROM order_items WHERE order_id = %s", (order_id,))
+        run_sql("SELECT product_id, quantity FROM order_items WHERE order_id = %s", (order_id,))
         items = cursor.fetchall()
+        if is_sqlite and items:
+            items = [dict(r) for r in items]
 
         for item in items:
-            cursor.execute(
+            run_sql(
                 "UPDATE products SET stock = stock + %s WHERE id = %s",
                 (item['quantity'], item['product_id'])
             )
 
         # 3. Update order status to 'Cancelled'
-        cursor.execute(
+        run_sql(
             "UPDATE orders SET order_status = 'Cancelled' WHERE id = %s",
             (order_id,)
         )
 
         # 4. Update payment status to 'Refunded' or 'Failed'
-        cursor.execute(
+        run_sql(
             """UPDATE payments
                SET payment_status = CASE
                    WHEN payment_status = 'Completed' THEN 'Refunded'

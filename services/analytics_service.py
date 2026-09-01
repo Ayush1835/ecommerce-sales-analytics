@@ -21,12 +21,12 @@ def get_monthly_revenue_analytics():
     conn = get_db_connection()
     try:
         query = """
-            SELECT DATE_FORMAT(order_date, '%Y-%m') AS month,
+            SELECT substr(order_date, 1, 7) AS month,
                    COUNT(id) AS order_count,
                    SUM(total_amount) AS total_revenue
             FROM orders
             WHERE order_status != 'Cancelled'
-            GROUP BY DATE_FORMAT(order_date, '%Y-%m')
+            GROUP BY substr(order_date, 1, 7)
             ORDER BY month ASC
         """
         df = pd.read_sql(query, conn)
@@ -218,7 +218,7 @@ def get_top_products_analytics(limit=10):
     """Extract top selling products using Pandas."""
     conn = get_db_connection()
     try:
-        query = """
+        query = f"""
             SELECT p.name AS product_name,
                    c.name AS category_name,
                    p.price,
@@ -232,9 +232,9 @@ def get_top_products_analytics(limit=10):
             WHERE o.order_status != 'Cancelled'
             GROUP BY p.id, p.name, c.name, p.price, p.stock
             ORDER BY units_sold DESC
-            LIMIT %s
+            LIMIT {int(limit)}
         """
-        df = pd.read_sql(query, conn, params=(limit,))
+        df = pd.read_sql(query, conn)
     finally:
         conn.close()
 
