@@ -32,7 +32,7 @@ except Exception as e:
     db_pool = None
 
 # SQLite Fallback Path & Setup
-SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'app_fallback.db')
+SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'app_v2.db')
 
 
 def init_sqlite_db():
@@ -112,11 +112,14 @@ def init_sqlite_db():
     cursor.execute("SELECT COUNT(*) FROM users")
     if cursor.fetchone()[0] == 0:
         from werkzeug.security import generate_password_hash
+        pass_123 = generate_password_hash("Password@123")
         admin_pass = generate_password_hash("Admin@123")
-        cust_pass = generate_password_hash("Customer@123")
 
-        cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES ('System Admin', 'admin@shopanalytica.com', ?, 'admin')", (admin_pass,))
-        cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES ('Demo Customer', 'customer@shopanalytica.com', ?, 'customer')", (cust_pass,))
+        # Seed both admin and customer credentials matching template buttons
+        cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES ('System Admin', 'admin@ecommerce.com', ?, 'admin')", (pass_123,))
+        cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES ('System Admin Alt', 'admin@shopanalytica.com', ?, 'admin')", (admin_pass,))
+        cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES ('Amit Patel', 'amit.patel@example.com', ?, 'customer')", (pass_123,))
+        cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES ('Demo Customer', 'customer@shopanalytica.com', ?, 'customer')", (pass_123,))
 
         categories = [
             ("Electronics", "Gadgets and devices"),
@@ -141,7 +144,7 @@ def init_sqlite_db():
         cursor.executemany("INSERT INTO products (name, description, price, stock_quantity, category_id, image_url) VALUES (?, ?, ?, ?, ?, ?)", products)
 
         # Seed initial order and payment for analytics
-        cursor.execute("INSERT INTO orders (user_id, total_amount, status, shipping_address) VALUES (2, 14999.00, 'completed', '124 Main St, City')", ())
+        cursor.execute("INSERT INTO orders (user_id, total_amount, status, shipping_address) VALUES (3, 14999.00, 'completed', '124 Main St, City')", ())
         order_id = cursor.lastrowid
         cursor.execute("INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) VALUES (?, 1, 1, 14999.00, 14999.00)", (order_id,))
         cursor.execute("INSERT INTO payments (order_id, payment_method, transaction_id, amount, status) VALUES (?, 'Credit Card', 'TXN_SEED_999', 14999.00, 'completed')", (order_id,))
@@ -149,6 +152,7 @@ def init_sqlite_db():
         conn.commit()
 
     conn.close()
+
 
 
 if db_pool is None:
