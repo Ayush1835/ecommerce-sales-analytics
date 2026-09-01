@@ -10,9 +10,11 @@ from models.db import execute_query
 
 def get_user_by_email(email):
     """Fetch a user by email (used during login)."""
+    if not email:
+        return None
     return execute_query(
-        "SELECT * FROM users WHERE email = %s",
-        (email,),
+        "SELECT * FROM users WHERE LOWER(email) = LOWER(%s)",
+        (email.strip(),),
         fetchone=True
     )
 
