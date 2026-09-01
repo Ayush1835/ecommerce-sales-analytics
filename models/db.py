@@ -32,7 +32,7 @@ except Exception as e:
     db_pool = None
 
 # SQLite Fallback Path & Setup
-SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'app_v10.db')
+SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'app_v11.db')
 
 
 def init_sqlite_db():
@@ -128,8 +128,8 @@ def init_sqlite_db():
     """)
     conn.commit()
 
-    # Seed Default Data if empty
-    cursor.execute("SELECT COUNT(*) FROM users")
+    # Seed Default Data if products table is empty
+    cursor.execute("SELECT COUNT(*) FROM products")
     if cursor.fetchone()[0] == 0:
         from werkzeug.security import generate_password_hash
         pass_123 = generate_password_hash("Password@123")
@@ -151,7 +151,7 @@ def init_sqlite_db():
             ('Aditya Malhotra', 'aditya.m@example.com', pass_123, 'customer', '9876543220', 'Civil Lines, Jaipur, Rajasthan 302006'),
             ('Pooja Deshmukh', 'pooja.d@example.com', pass_123, 'customer', '9876543221', 'Viman Nagar, Pune, Maharashtra 411014')
         ]
-        cursor.executemany("INSERT INTO users (name, email, password_hash, role, phone, address) VALUES (?, ?, ?, ?, ?, ?)", users_list)
+        cursor.executemany("INSERT OR IGNORE INTO users (name, email, password_hash, role, phone, address) VALUES (?, ?, ?, ?, ?, ?)", users_list)
 
         categories = [
             ('Electronics', 'Gadgets, devices, and electronic appliances'),
@@ -167,7 +167,7 @@ def init_sqlite_db():
             ('Mobile Accessories', 'Cases, chargers, screen protectors, and power banks'),
             ('Stationery & Office', 'Notebooks, pens, desk organizers, and office supplies')
         ]
-        cursor.executemany("INSERT INTO categories (name, description) VALUES (?, ?)", categories)
+        cursor.executemany("INSERT OR IGNORE INTO categories (name, description) VALUES (?, ?)", categories)
 
         products = [
             # 1. Electronics
